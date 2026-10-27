@@ -1,2555 +1,1374 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>YHK Thermal Studio Pro — Impresora BLE 384px</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts para el módulo de Texto -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Permanent+Marker&family=VT323&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-            serif: ['Merriweather', 'serif'],
-            marker: ['Permanent Marker', 'cursive'],
-            pixel: ['VT323', 'monospace']
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YHK Cat Printer Studio — Bluefy iOS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Phosphor -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Generador QR Ligero -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <!-- Fuente Inter y Monospace -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cat: {
+                            50: '#fdf4ff',
+                            100: '#fae8ff',
+                            400: '#e879f9',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                        }
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-
-  <style>
-    /* Patrón de papel térmico realista para la vista previa 384px */
-    .thermal-paper-bg {
-      background-color: #faf9f5;
-      background-image: 
-        radial-gradient(#e5e4dc 0.5px, transparent 0.5px),
-        linear-gradient(to right, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(0,0,0,0.03) 100%);
-      background-size: 12px 12px, 100% 100%;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1);
-    }
-
-    /* Bordes dentados de corte de ticket */
-    .receipt-zig-top {
-      background: linear-gradient(-45deg, #faf9f5 6px, transparent 0), linear-gradient(45deg, #faf9f5 6px, transparent 0);
-      background-position: left-bottom;
-      background-repeat: repeat-x;
-      background-size: 12px 12px;
-      height: 12px;
-      width: 100%;
-    }
-    .receipt-zig-bottom {
-      background: linear-gradient(-135deg, #faf9f5 6px, transparent 0), linear-gradient(135deg, #faf9f5 6px, transparent 0);
-      background-position: left-top;
-      background-repeat: repeat-x;
-      background-size: 12px 12px;
-      height: 12px;
-      width: 100%;
-    }
-
-    /* Renderizado pixel-perfect para el canvas 1-bit de 384px */
-    canvas.pixelated {
-      image-rendering: -moz-crisp-edges;
-      image-rendering: -webkit-crisp-edges;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
-
-    /* Mejoras táctiles para iOS / Bluefy */
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      background: transparent;
-      cursor: pointer;
-    }
-    input[type="range"]::-webkit-slider-runnable-track {
-      background: #334155;
-      height: 6px;
-      border-radius: 999px;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      margin-top: -5px;
-      background-color: #38bdf8;
-      height: 16px;
-      width: 16px;
-      border-radius: 999px;
-      border: 2px solid #0f172a;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
-    }
-    /* Evitar zoom accidental en inputs en iOS */
-    input, select, textarea {
-      font-size: 16px !important;
-    }
-  </style>
+    </script>
+    <style>
+        /* Estilos personalizados para sensación nativa en iOS / Bluefy */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        /* Efecto de bordes dentados de recibo térmico */
+        .receipt-jagged-top {
+            background-image: linear-gradient(135deg, #0f172a 50%, transparent 50%), linear-gradient(225deg, #0f172a 50%, transparent 50%);
+            background-position: top left, top left;
+            background-size: 12px 12px;
+            background-repeat: repeat-x;
+        }
+        .receipt-jagged-bottom {
+            background-image: linear-gradient(45deg, #0f172a 50%, transparent 50%), linear-gradient(315deg, #0f172a 50%, transparent 50%);
+            background-position: bottom left, bottom left;
+            background-size: 12px 12px;
+            background-repeat: repeat-x;
+        }
+        /* Renderizado pixelado nítido para vista previa de 1-bit (384px) */
+        canvas.thermal-preview {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        /* Scrollbar oculto en pestañas móviles */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white pb-28">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-28 selection:bg-fuchsia-500 selection:text-white">
 
-  <!-- BARRA SUPERIOR DE ESTADO Y CONEXIÓN BLE -->
-  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 py-2.5">
-    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <!-- Identidad y estado -->
-      <div class="flex items-center gap-2.5">
-        <div class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-slate-800 border border-slate-700">
-          <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-          </svg>
-          <span id="bleStatusDot" class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-slate-900"></span>
+    <!-- BARRA SUPERIOR / ESTADO BLUETOOTH -->
+    <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+        <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-fuchsia-600 to-pink-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/20">
+                    <i class="ph-fill ph-cat text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight flex items-center gap-1.5">
+                        YHK CatPrint
+                        <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-slate-800 text-fuchsia-400 border border-slate-700">384px</span>
+                    </h1>
+                    <div id="statusIndicator" class="flex items-center gap-1.5 text-xs text-slate-400">
+                        <span id="statusDot" class="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span id="statusText" class="truncate max-w-[150px]">Desconectado</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="btnConnect" onclick="toggleBluetoothConnection()" class="px-4 py-2 rounded-xl font-semibold text-xs flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 active:scale-95 text-white transition shadow-lg shadow-fuchsia-600/25">
+                    <i id="btIcon" class="ph-bold ph-bluetooth text-base"></i>
+                    <span id="btBtnText">Conectar</span>
+                </button>
+            </div>
         </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-sm font-bold tracking-tight text-white">YHK Studio Pro</h1>
-            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/30">384px · ESC/POS</span>
-          </div>
-          <p id="bleDeviceLabel" class="text-[11px] text-slate-400 font-mono truncate max-w-[180px] sm:max-w-xs">
-            Desconectado (Usa Bluefy en iOS)
-          </p>
+    </header>
+
+    <!-- AVISO SI NO ES BLUEFY / WEB BLUETOOTH NO SOPORTADO -->
+    <div id="bleWarning" class="hidden max-w-lg mx-auto mt-3 px-4">
+        <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 text-amber-200 text-xs flex items-start gap-3">
+            <i class="ph-fill ph-warning-circle text-xl text-amber-400 shrink-0 mt-0.5"></i>
+            <div>
+                <p class="font-semibold text-amber-300">Web Bluetooth no detectado en este navegador</p>
+                <p class="mt-0.5 text-amber-200/80">En iPhone/iOS, Safari bloquea Bluetooth. Abre esta misma página dentro de la app gratuita <strong>Bluefy – Web BLE Browser</strong> para conectar tu impresora YHK.</p>
+            </div>
         </div>
-      </div>
-
-      <!-- Botones rápidos BLE y Avance de Papel -->
-      <div class="flex items-center gap-1.5">
-        <button id="btnFeedPaper" onclick="PrinterEngine.feedLines(3)" title="Avanzar papel 3 líneas" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 text-xs font-medium flex items-center gap-1 transition">
-          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-          </svg>
-          <span class="hidden sm:inline">Avanzar</span>
-        </button>
-
-        <button id="btnConnectYHK" onclick="PrinterEngine.connect(false)" class="px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
-          <span id="btnConnectText">Conectar YHK</span>
-        </button>
-
-        <button id="btnConnectAll" onclick="PrinterEngine.connect(true)" title="Escaneo Universal (Muestra todos los dispositivos BLE en Bluefy)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 border border-slate-700 text-xs transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- BANNER DE ESTADO / NOTIFICACIONES NO INTRUSIVAS (Sin alert) -->
-  <div id="toastBanner" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md rounded-2xl p-3 shadow-2xl border backdrop-blur-md transition-all duration-200">
-    <div class="flex items-start justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <span id="toastIcon" class="text-base">ℹ️</span>
-        <p id="toastMessage" class="text-xs font-medium leading-snug"></p>
-      </div>
-      <button onclick="UI.hideToast()" class="text-xs opacity-70 hover:opacity-100 px-1">✕</button>
-    </div>
-  </div>
-
-  <!-- SELECTOR GLOBAL DE PERFILES DE CALIDAD Y MODO ECO -->
-  <section class="max-w-5xl mx-auto px-3 pt-3">
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-          Perfiles Maestros de Impresión (Eco / Calidad / Seguridad)
-        </span>
-        <span id="activePresetBadge" class="text-[11px] font-mono text-sky-400">Equilibrado</span>
-      </div>
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-        <button onclick="PresetManager.apply('eco_extreme')" id="preset_eco_extreme" class="preset-btn text-left p-2 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-emerald-500/50 transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-400">🌱 Eco Extremo</span>
-            <span class="text-[10px] font-mono text-slate-400">-55% Calor</span>
-          </div>
-          <p class="text-[10px] text-slate-400 mt-0.5 leading-tight">Ahorro máximo de batería y cabezal. Trama calada.</p>
-        </button>
-
-        <button onclick="PresetManager.apply('eco_daily')" id="preset_eco_daily" class="preset-btn text-left p-2 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-emerald-400/50 transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-teal-300">🍃 Eco Diario</span>
-            <span class="text-[10px] font-mono text-slate-400">Atkinson</span>
-          </div>
-          <p class="text-[10px] text-slate-400 mt-0.5 leading-tight">Limpio, rápido y sin manchas negras densas.</p>
-        </button>
-
-        <button onclick="PresetManager.apply('failsafe')" id="preset_failsafe" class="preset-btn text-left p-2 rounded-xl border border-sky-500/60 bg-sky-500/10 transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-sky-300">🛡️ Anti-Fallos</span>
-            <span class="text-[10px] font-mono text-sky-400">Seguro</span>
-          </div>
-          <p class="text-[10px] text-slate-300 mt-0.5 leading-tight">Chunks de 32B y pausas anti-desbordamiento RAM.</p>
-        </button>
-
-        <button onclick="PresetManager.apply('hq_photo')" id="preset_hq_photo" class="preset-btn text-left p-2 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-purple-400/50 transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-purple-300">💎 Foto HQ Pro</span>
-            <span class="text-[10px] font-mono text-slate-400">Stucki+Nitidez</span>
-          </div>
-          <p class="text-[10px] text-slate-400 mt-0.5 leading-tight">Máximo detalle, micro-bandas y negros profundos.</p>
-        </button>
-
-        <button onclick="PresetManager.apply('hq_crisp')" id="preset_hq_crisp" class="preset-btn col-span-2 sm:col-span-1 text-left p-2 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-amber-400/50 transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-300">✒️ Texto/Línea HD</span>
-            <span class="text-[10px] font-mono text-slate-400">Bordes Puros</span>
-          </div>
-          <p class="text-[10px] text-slate-400 mt-0.5 leading-tight">Ideal para etiquetas, códigos QR, logos y tickets.</p>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- NAVEGACIÓN DE MÓDULOS -->
-  <nav class="max-w-5xl mx-auto px-3 mt-3">
-    <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
-      <button onclick="UI.switchTab('image')" id="tabBtn_image" class="py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        <span>1. Módulo Imagen</span>
-      </button>
-
-      <button onclick="UI.switchTab('text')" id="tabBtn_text" class="py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 text-slate-300 hover:text-white transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        <span>2. Módulo Texto</span>
-      </button>
-
-      <button onclick="UI.switchTab('engine')" id="tabBtn_engine" class="py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 text-slate-300 hover:text-white transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span>Ajustes BLE / Motor</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- CONTENIDO PRINCIPAL: COLUMNAS EN DESKTOP, APILADO EN IPHONE -->
-  <main class="max-w-5xl mx-auto px-3 mt-3 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-
-    <!-- COLUMNA IZQUIERDA: CONTROLES DEL MÓDULO ACTIVO (7 cols en desktop) -->
-    <div class="lg:col-span-7 space-y-3">
-
-      <!-- =================================================================== -->
-      <!-- MÓDULO 1: IMAGEN Y PROCESAMIENTO RÁSTER 1-BIT                       -->
-      <!-- =================================================================== -->
-      <section id="panel_image" class="space-y-3">
-        <!-- Carga de imagen y patrones -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Origen de Imagen</h2>
-            <div class="flex gap-1.5">
-              <button onclick="ImageModule.loadTestPattern('calibration')" class="text-[11px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">
-                Patrón Calibración
-              </button>
-              <button onclick="ImageModule.loadTestPattern('gradient')" class="text-[11px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">
-                Test Retrato/Arte
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <!-- Selector de Fototeca / Archivos -->
-            <label class="cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-slate-700 hover:border-sky-400 bg-slate-950/50 transition text-center">
-              <svg class="w-6 h-6 text-sky-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-              </svg>
-              <span class="text-xs font-bold text-slate-200">Elegir Foto / Archivo</span>
-              <span class="text-[10px] text-slate-400">Galería iOS o Archivos</span>
-              <input type="file" id="imgInputFile" accept="image/*" class="hidden" onchange="ImageModule.handleFileUpload(event)" />
-            </label>
-
-            <!-- Tomar Foto directa con cámara -->
-            <label class="cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-slate-700 hover:border-emerald-400 bg-slate-950/50 transition text-center">
-              <svg class="w-6 h-6 text-emerald-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              <span class="text-xs font-bold text-slate-200">Cámara Directa</span>
-              <span class="text-[10px] text-slate-400">Foto instantánea</span>
-              <input type="file" id="imgInputCamera" accept="image/*" capture="environment" class="hidden" onchange="ImageModule.handleFileUpload(event)" />
-            </label>
-          </div>
-
-          <!-- Geometría rápida: Rotar, Espejo, Escala -->
-          <div class="pt-1 border-t border-slate-800/80 grid grid-cols-4 gap-1.5">
-            <button onclick="ImageModule.rotate(-90)" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium flex items-center justify-center gap-1">
-              ↺ -90°
-            </button>
-            <button onclick="ImageModule.rotate(90)" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium flex items-center justify-center gap-1">
-              ↻ +90°
-            </button>
-            <button onclick="ImageModule.toggleFlipH()" id="btnFlipH" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium flex items-center justify-center gap-1">
-              ⇄ Espejo H
-            </button>
-            <button onclick="ImageModule.toggleFlipV()" id="btnFlipV" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium flex items-center justify-center gap-1">
-              ⇅ Espejo V
-            </button>
-          </div>
-        </div>
-
-        <!-- Tramado (Dithering) y Modo Eco de Imagen -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Motor de Tramado 1-Bit (Dithering)</h2>
-            <span class="text-[11px] font-mono text-slate-400">48 Bytes/Fila</span>
-          </div>
-
-          <div>
-            <label class="block text-xs text-slate-300 font-medium mb-1">Algoritmo de Conversión Monocromática</label>
-            <select id="imgDitherAlgo" onchange="ImageModule.render()" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white focus:border-sky-400 focus:outline-none">
-              <option value="atkinson">Atkinson (Recomendado Térmico · Nítido y ahorra calor)</option>
-              <option value="floyd">Floyd-Steinberg (Fotográfico suave clásico)</option>
-              <option value="stucki">Stucki Alta Definición (12 vecinos · Máximo detalle HQ)</option>
-              <option value="sierra">Sierra Lite (Gradientes suaves y rápidos)</option>
-              <option value="bayer4">Matriz Ordenada Bayer 4x4 (Estilo Retro / Pixel Art)</option>
-              <option value="bayer8">Matriz Ordenada Bayer 8x8 (Semitono fino de prensa)</option>
-              <option value="halftone">Semitono Punto Circular (Efecto Cómic / Periódico)</option>
-              <option value="threshold">Umbral Puro (Blanco y Negro directo para Logos/QR)</option>
-              <option value="adaptive">Umbral Dinámico Local (Ideal para documentos fotografiados)</option>
-              <option value="edges_eco">🌱 Contorno Puro Sobel (Ultra-Eco: Solo dibuja bordes)</option>
-            </select>
-          </div>
-
-          <!-- Ahorro Térmico Inteligente (Eco Dot-Skipping) -->
-          <div class="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-1.5">
-            <div class="flex justify-between text-xs">
-              <label for="imgEcoSaver" class="font-bold text-emerald-300 flex items-center gap-1">
-                <span>🌱 Reducción de Masa Negra (Eco-Térmico)</span>
-              </label>
-              <span id="val_imgEcoSaver" class="font-mono text-emerald-400">0%</span>
-            </div>
-            <input type="range" id="imgEcoSaver" min="0" max="65" step="5" value="0" oninput="ImageModule.render()" class="w-full" />
-            <p class="text-[10px] text-slate-400 leading-tight">
-              Aligera las zonas negras sólidas mediante micro-perforación sin perder bordes. Evita que el cabezal se sobrecaliente o atasque el papel.
-            </p>
-          </div>
-
-          <!-- Umbral manual (visible especialmente para Threshold / Bordes) -->
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <label for="imgThreshold" class="text-slate-300">Punto de Corte / Sensibilidad de Negro</label>
-              <span id="val_imgThreshold" class="font-mono text-sky-400">128</span>
-            </div>
-            <input type="range" id="imgThreshold" min="20" max="235" value="128" oninput="ImageModule.render()" class="w-full" />
-          </div>
-        </div>
-
-        <!-- Filtros de Curva Tonal y Nitidez -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Ajustes de Imagen, Curva y Encuadre</h2>
-            <button onclick="ImageModule.resetFilters()" class="text-[11px] text-slate-400 hover:text-white underline">Restablecer</button>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <!-- Brillo -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Brillo</span>
-                <span id="val_imgBrightness" class="font-mono text-sky-400">0</span>
-              </div>
-              <input type="range" id="imgBrightness" min="-100" max="100" value="0" oninput="ImageModule.render()" class="w-full" />
-            </div>
-
-            <!-- Contraste -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Contraste</span>
-                <span id="val_imgContrast" class="font-mono text-sky-400">10</span>
-              </div>
-              <input type="range" id="imgContrast" min="-100" max="100" value="10" oninput="ImageModule.render()" class="w-full" />
-            </div>
-
-            <!-- Corrección Gamma (vital para papel térmico) -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Gamma Térmica (Sombras)</span>
-                <span id="val_imgGamma" class="font-mono text-sky-400">1.10</span>
-              </div>
-              <input type="range" id="imgGamma" min="0.3" max="2.5" step="0.05" value="1.10" oninput="ImageModule.render()" class="w-full" />
-            </div>
-
-            <!-- Nitidez (Unsharp Mask) -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Nitidez de Bordes (HQ)</span>
-                <span id="val_imgSharpness" class="font-mono text-sky-400">25%</span>
-              </div>
-              <input type="range" id="imgSharpness" min="0" max="100" step="5" value="25" oninput="ImageModule.render()" class="w-full" />
-            </div>
-
-            <!-- Escala de ancho en el rollo -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Ancho en Papel (% de 384px)</span>
-                <span id="val_imgScale" class="font-mono text-sky-400">100%</span>
-              </div>
-              <input type="range" id="imgScale" min="25" max="100" step="5" value="100" oninput="ImageModule.render()" class="w-full" />
-            </div>
-
-            <!-- Alineación cuando ancho < 100% -->
-            <div>
-              <span class="block text-xs text-slate-300 mb-1">Alineación Horizontal</span>
-              <div class="grid grid-cols-3 gap-1">
-                <button onclick="ImageModule.setAlign('left')" id="imgAlign_left" class="py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Izquierda</button>
-                <button onclick="ImageModule.setAlign('center')" id="imgAlign_center" class="py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/50 text-xs text-sky-300 font-bold">Centro</button>
-                <button onclick="ImageModule.setAlign('right')" id="imgAlign_right" class="py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Derecha</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Switches extra de imagen -->
-          <div class="pt-2 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer bg-slate-950/60 p-2 rounded-xl border border-slate-800">
-              <input type="checkbox" id="imgInvert" onchange="ImageModule.render()" class="rounded text-sky-500 focus:ring-0" />
-              <span>Invertir (Negativo)</span>
-            </label>
-
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer bg-slate-950/60 p-2 rounded-xl border border-slate-800">
-              <input type="checkbox" id="imgTrimWhite" onchange="ImageModule.render()" class="rounded text-sky-500 focus:ring-0" />
-              <span>Recortar Blancos</span>
-            </label>
-
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer bg-slate-950/60 p-2 rounded-xl border border-slate-800 col-span-2 sm:col-span-1">
-              <input type="checkbox" id="imgAddBorder" onchange="ImageModule.render()" class="rounded text-sky-500 focus:ring-0" />
-              <span>Marco Fino 384px</span>
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <!-- =================================================================== -->
-      <!-- MÓDULO 2: ESTUDIO DE TEXTO, ETIQUETAS Y TICKETS                     -->
-      <!-- =================================================================== -->
-      <section id="panel_text" class="hidden space-y-3">
-        <!-- Plantillas rápidas -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-center justify-between flex-wrap gap-1">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Plantillas Rápidas de Texto</h2>
-            <div class="flex flex-wrap gap-1">
-              <button onclick="TextModule.loadTemplate('note')" class="text-[11px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Nota</button>
-              <button onclick="TextModule.loadTemplate('checklist')" class="text-[11px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Checklist</button>
-              <button onclick="TextModule.loadTemplate('label')" class="text-[11px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Etiqueta Grande</button>
-              <button onclick="TextModule.loadTemplate('receipt')" class="text-[11px] px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Ticket/Recibo</button>
-            </div>
-          </div>
-
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <label for="txtContent" class="text-xs text-slate-300 font-medium">Contenido del Texto (Soporta Emojis, Ñ, Tildes y Multilínea)</label>
-              <button onclick="document.getElementById('txtContent').value=''; TextModule.render();" class="text-[11px] text-rose-400 hover:underline">Limpiar</button>
-            </div>
-            <textarea id="txtContent" rows="5" oninput="TextModule.render()" placeholder="Escribe aquí tu nota, lista o etiqueta..." class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-slate-100 focus:border-sky-400 focus:outline-none font-sans leading-relaxed">📌 NOTA IMPORTANTE
--------------------------
-[ ] Revisar inventario
-[x] Configurar impresora YHK
-[ ] Imprimir etiquetas QR
-
-¡Impresión 100% nítida a 384 puntos por línea!</textarea>
-            <p class="text-[10px] text-slate-400 mt-1">
-              💡 Tip: Usa <code class="text-sky-400">[ ]</code> o <code class="text-sky-400">[x]</code> al inicio de una línea para casillas de verificación, o <code class="text-sky-400">---</code> para una línea divisoria.
-            </p>
-          </div>
-        </div>
-
-        <!-- Tipografía y Estilo Visual -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Tipografía, Formato y Modo Eco</h2>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-slate-300 mb-1">Familia Tipográfica</label>
-              <select id="txtFontFamily" onchange="TextModule.render()" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white">
-                <option value="Inter, system-ui, sans-serif">Sans-Serif Moderna (Inter)</option>
-                <option value="'JetBrains Mono', monospace">Monoespaciada Técnica (Ticket)</option>
-                <option value="'Merriweather', Georgia, serif">Serif Editorial (Libro / Clásica)</option>
-                <option value="'Permanent Marker', cursive">Rotulador / Marcador Grueso</option>
-                <option value="'VT323', monospace">Pixel Retro 8-Bit (Térmica Clásica)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs text-slate-300 mb-1">Modo de Relleno / Ahorro Térmico</label>
-              <select id="txtRenderStyle" onchange="TextModule.render()" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white">
-                <option value="solid">Negro Sólido (Máximo Contraste HQ)</option>
-                <option value="eco_hollow">🌱 Eco Contorno Hueco (Ahorra 75% de calor en letras grandes)</option>
-                <option value="eco_halftone">🍃 Eco Semitono (Trama interna ahorradora)</option>
-                <option value="inverted_safe">Fondo Negro Invertido (Con micro-trama anti-atasco)</option>
-              </select>
-            </div>
-
-            <!-- Tamaño de Fuente -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Tamaño de Letra (px)</span>
-                <span id="val_txtFontSize" class="font-mono text-sky-400">26 px</span>
-              </div>
-              <input type="range" id="txtFontSize" min="14" max="84" step="2" value="26" oninput="TextModule.render()" class="w-full" />
-            </div>
-
-            <!-- Interlineado -->
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Espaciado entre Líneas</span>
-                <span id="val_txtLineHeight" class="font-mono text-sky-400">1.35</span>
-              </div>
-              <input type="range" id="txtLineHeight" min="0.9" max="2.2" step="0.05" value="1.35" oninput="TextModule.render()" class="w-full" />
-            </div>
-          </div>
-
-          <!-- Botonera de Alineación, Peso y Decoración -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-            <!-- Alineación -->
-            <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800">
-              <button onclick="TextModule.setAlign('left')" id="txtAlign_left" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950">Izq</button>
-              <button onclick="TextModule.setAlign('center')" id="txtAlign_center" class="flex-1 py-1.5 rounded-lg text-xs text-slate-400">Cen</button>
-              <button onclick="TextModule.setAlign('right')" id="txtAlign_right" class="flex-1 py-1.5 rounded-lg text-xs text-slate-400">Der</button>
-            </div>
-
-            <!-- Estilos B / I / U -->
-            <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 gap-1">
-              <button onclick="TextModule.toggleStyle('bold')" id="txtStyle_bold" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">B</button>
-              <button onclick="TextModule.toggleStyle('italic')" id="txtStyle_italic" class="flex-1 py-1.5 rounded-lg text-xs italic text-slate-400">I</button>
-              <button onclick="TextModule.toggleStyle('underline')" id="txtStyle_underline" class="flex-1 py-1.5 rounded-lg text-xs underline text-slate-400">U</button>
-            </div>
-
-            <!-- Marco / Borde de Ticket -->
-            <select id="txtBorderStyle" onchange="TextModule.render()" class="rounded-xl bg-slate-950 border border-slate-800 px-2.5 py-1.5 text-xs text-slate-200">
-              <option value="none">Sin Marco</option>
-              <option value="simple">Marco Línea Simple</option>
-              <option value="double">Marco Doble Elegante</option>
-              <option value="dashed">Línea de Corte Punteada</option>
-              <option value="Warning">Banda Industrial Alerta</option>
-            </select>
-
-            <!-- Orientación Banner -->
-            <label class="flex items-center justify-center gap-1.5 text-xs text-slate-300 cursor-pointer bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800">
-              <input type="checkbox" id="txtRotateBanner" onchange="TextModule.render()" class="rounded text-sky-500" />
-              <span>Banner 90°</span>
-            </label>
-          </div>
-
-          <!-- Extras de Ticket: Fecha/Hora y Código QR / Barras integrado -->
-          <div class="pt-2 border-t border-slate-800 space-y-2">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" id="txtShowDate" checked onchange="TextModule.render()" class="rounded text-sky-500" />
-                <span>Incluir Encabezado con Fecha y Hora</span>
-              </label>
-
-              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" id="txtShowCutLine" checked onchange="TextModule.render()" class="rounded text-sky-500" />
-                <span>Línea guía de corte al final (✂)</span>
-              </label>
-            </div>
-
-            <!-- Generador de Código de Barras CODE-128 / Etiqueta al pie -->
-            <div class="flex items-center gap-2 pt-1">
-              <input type="text" id="txtBarcodeValue" oninput="TextModule.render()" placeholder="Opcional: Código de barras al pie (ej. YHK-2026)" class="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs text-white font-mono" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- =================================================================== -->
-      <!-- MÓDULO 3: MOTOR AVANZADO BLE, ESC/POS Y DIAGNÓSTICO A PRUEBA FALLOS -->
-      <!-- =================================================================== -->
-      <section id="panel_engine" class="hidden space-y-3">
-        <!-- Control de Fragmentación BLE (Pacing / Chunking) -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Control Anti-Desbordamiento (Pacing & Chunking BLE)</h2>
-              <p class="text-[11px] text-slate-400">Mitigación de Buffer Overrun para RAM de 512B–1KB en chipsets JieLi / Telink</p>
-            </div>
-            <button onclick="PresetManager.apply('failsafe')" class="text-[11px] px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold">
-              Valores Seguros
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <!-- Tamaño de paquete MTU -->
-            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300 font-medium">Tamaño Paquete BLE (MTU Chunk)</span>
-                <span id="val_cfgChunkSize" class="font-mono text-sky-400">36 Bytes</span>
-              </div>
-              <input type="range" id="cfgChunkSize" min="16" max="180" step="4" value="36" oninput="EngineConfig.updateFromUI()" class="w-full" />
-              <p class="text-[10px] text-slate-400 mt-1">20B–48B es ideal en iOS Bluefy. Valores >100B pueden saturar el buffer.</p>
-            </div>
-
-            <!-- Pausa entre paquetes -->
-            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300 font-medium">Pausa entre Paquetes (Chunk Delay)</span>
-                <span id="val_cfgChunkDelay" class="font-mono text-sky-400">16 ms</span>
-              </div>
-              <input type="range" id="cfgChunkDelay" min="4" max="80" step="2" value="16" oninput="EngineConfig.updateFromUI()" class="w-full" />
-              <p class="text-[10px] text-slate-400 mt-1">Tiempo para que la UART transparente vacíe la cola de recepción.</p>
-            </div>
-
-            <!-- Filas por banda GS v 0 -->
-            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300 font-medium">Filas por Banda Ráster (<code class="text-sky-300">GS v 0</code>)</span>
-                <span id="val_cfgRowsPerBand" class="font-mono text-sky-400">24 filas</span>
-              </div>
-              <input type="range" id="cfgRowsPerBand" min="8" max="128" step="8" value="24" oninput="EngineConfig.updateFromUI()" class="w-full" />
-              <p class="text-[10px] text-slate-400 mt-1">24 filas = 1152 bytes por bloque. Evita que la impresora se congele a mitad.</p>
-            </div>
-
-            <!-- Pausa entre bandas -->
-            <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300 font-medium">Pausa Base entre Bandas</span>
-                <span id="val_cfgBandDelay" class="font-mono text-sky-400">35 ms</span>
-              </div>
-              <input type="range" id="cfgBandDelay" min="0" max="250" step="5" value="35" oninput="EngineConfig.updateFromUI()" class="w-full" />
-              <p class="text-[10px] text-slate-400 mt-1">Permite que el motor paso a paso avance el papel con precisión.</p>
-            </div>
-          </div>
-
-          <!-- Protección térmica inteligente y modo de escritura -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div>
-              <label class="block text-xs text-slate-300 mb-1">Método de Escritura GATT BLE</label>
-              <select id="cfgWriteMode" onchange="EngineConfig.updateFromUI()" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white">
-                <option value="auto">Automático (writeWithoutResponse con fallback)</option>
-                <option value="withoutResponse">Forzar writeWithoutResponse (Más rápido)</option>
-                <option value="withResponse">Forzar writeValue con ACK (Ultra seguro, más lento)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs text-slate-300 mb-1">Modo de Resolución Ráster (<code class="text-sky-400">GS v 0 m</code>)</label>
-              <select id="cfgRasterMode" onchange="EngineConfig.updateFromUI()" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white">
-                <option value="0">0x00 Normal (203 DPI · 384px reales)</option>
-                <option value="1">0x01 Doble Ancho</option>
-                <option value="2">0x02 Doble Alto (Estiramiento vertical)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap gap-3 pt-1">
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="cfgAdaptiveThermal" checked onchange="EngineConfig.updateFromUI()" class="rounded text-sky-500" />
-              <span><strong>Enfriamiento Dinámico:</strong> Añadir pausa extra automática en franjas muy negras (>55% densidad)</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Parámetros ESC/POS y UUIDs -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-          <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Protocolo ESC/POS y Arquitectura GATT ISSC</h2>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-slate-300 mb-1">Comando Hardware de Densidad Térmica</label>
-              <select id="cfgDensityCmd" onchange="EngineConfig.updateFromUI()" class="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white">
-                <option value="none">Ninguno (100% Seguro · Solo control por Software)</option>
-                <option value="esc7_low">ESC 7 Ligero (Menor calentamiento de agujas)</option>
-                <option value="esc7_med">ESC 7 Estándar (Equilibrado)</option>
-                <option value="esc7_high">ESC 7 Intenso (Mayor tiempo de quemado térmico)</option>
-              </select>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <span class="text-slate-300">Avance de Papel al Finalizar (<code class="text-sky-400">0x0A</code>)</span>
-                <span id="val_cfgFeedAfter" class="font-mono text-sky-400">4 líneas</span>
-              </div>
-              <input type="range" id="cfgFeedAfter" min="0" max="10" step="1" value="4" oninput="EngineConfig.updateFromUI()" class="w-full mt-2" />
-            </div>
-          </div>
-
-          <!-- UUIDs Transparent UART ISSC -->
-          <div class="grid grid-cols-1 gap-2 pt-2 border-t border-slate-800 text-[11px] font-mono">
-            <div>
-              <label class="text-slate-400 block mb-0.5">UUID Servicio Principal (ISSC Transparent UART):</label>
-              <input type="text" id="cfgServiceUuid" value="49535343-fe7d-4ae5-8fa9-9fafd205e455" onchange="EngineConfig.updateFromUI()" class="w-full rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1.5 text-slate-200" />
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label class="text-slate-400 block mb-0.5">UUID Escritura TX (Host → Impresora):</label>
-                <input type="text" id="cfgTxUuid" value="49535343-8841-43f4-a8d4-ecbe34729bb3" onchange="EngineConfig.updateFromUI()" class="w-full rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1.5 text-slate-200" />
-              </div>
-              <div>
-                <label class="text-slate-400 block mb-0.5">UUID Notificación RX (Impresora → Host):</label>
-                <input type="text" id="cfgRxUuid" value="49535343-1e4d-4bd9-ba61-23c647249616" onchange="EngineConfig.updateFromUI()" class="w-full rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1.5 text-slate-200" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Consola de Diagnóstico y Envío Directo -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Herramientas de Prueba y Monitor BLE</h2>
-            <button onclick="Logger.clear()" class="text-[11px] text-slate-400 hover:text-white">Limpiar Log</button>
-          </div>
-
-          <div class="flex flex-wrap gap-1.5">
-            <button onclick="PrinterEngine.printHardwareTestTicket()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold">
-              🧾 Imprimir Micro-Ticket de Prueba Segura
-            </button>
-            <button onclick="PrinterEngine.sendRawHex('1B 40 0A')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono">
-              Enviar ESC @ (Init)
-            </button>
-            <button onclick="PrinterEngine.queryStatus()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono">
-              Sondear Estado (DLE EOT)
-            </button>
-          </div>
-
-          <div class="flex gap-1.5">
-            <input type="text" id="customHexInput" placeholder="Comando HEX manual (ej: 1B 40 1B 64 03)" class="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs font-mono text-white" />
-            <button onclick="PrinterEngine.sendCustomHexInput()" class="px-3 py-1.5 rounded-xl bg-sky-500 text-slate-950 font-bold text-xs">
-              Enviar HEX
-            </button>
-          </div>
-
-          <div id="bleConsoleLog" class="h-40 overflow-y-auto rounded-xl bg-slate-950 border border-slate-800 p-2.5 font-mono text-[11px] text-slate-300 space-y-1"></div>
-        </div>
-      </section>
-
     </div>
 
-    <!-- COLUMNA DERECHA: SIMULADOR DE PAPEL TÉRMICO 384PX Y TELEMETRÍA (5 cols en desktop) -->
-    <div class="lg:col-span-5 space-y-3 lg:sticky lg:top-16">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-        <!-- Cabecera de Vista Previa y Telemetría -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-              <span>Vista Previa Real 1-Bit</span>
-              <span class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-300">384 px / 48 mm</span>
-            </h2>
-            <p id="previewDimensionsText" class="text-[11px] font-mono text-slate-400 mt-0.5">
-              384 × 240 px · ~30 mm alto
-            </p>
-          </div>
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="max-w-lg mx-auto px-4 pt-4 space-y-5">
 
-          <!-- Medidor de Carga Térmica -->
-          <div class="text-right">
-            <div class="text-[10px] uppercase tracking-wider text-slate-400">Densidad Térmica</div>
-            <div id="thermalLoadBadge" class="text-xs font-mono font-bold text-emerald-400">18% (Óptima)</div>
-          </div>
+        <!-- SELECTOR DE MODO (TABS) -->
+        <div class="grid grid-cols-4 gap-1.5 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+            <button onclick="switchMode('note')" id="tab-note" class="mode-tab active-tab py-2 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition bg-slate-800 text-fuchsia-400 shadow">
+                <i class="ph-bold ph-text-t text-lg"></i>
+                <span>Texto</span>
+            </button>
+            <button onclick="switchMode('photo')" id="tab-photo" class="mode-tab py-2 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-slate-200">
+                <i class="ph-bold ph-image text-lg"></i>
+                <span>Foto</span>
+            </button>
+            <button onclick="switchMode('draw')" id="tab-draw" class="mode-tab py-2 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-slate-200">
+                <i class="ph-bold ph-Scribble-loop text-lg"></i>
+                <span>Dibujar</span>
+            </button>
+            <button onclick="switchMode('qr')" id="tab-qr" class="mode-tab py-2 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-slate-200">
+                <i class="ph-bold ph-qr-code text-lg"></i>
+                <span>QR / Lista</span>
+            </button>
         </div>
 
-        <!-- Barra de carga térmica visual -->
-        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-          <div id="thermalLoadBar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 18%"></div>
-        </div>
-
-        <!-- Contenedor del rollo de papel térmico (384px) -->
-        <div class="flex flex-col items-center justify-center bg-slate-950/90 rounded-xl p-3 border border-slate-800/90 overflow-hidden">
-          <div class="w-full max-w-[340px] flex flex-col items-center">
-            <div class="receipt-zig-top"></div>
-            <div class="thermal-paper-bg w-full px-3 py-3 flex flex-col items-center">
-              <!-- Regla superior milimétrica sutil -->
-              <div class="w-full flex justify-between text-[9px] font-mono text-slate-400 border-b border-slate-300 pb-1 mb-2 select-none">
-                <span>0mm</span>
-                <span>24mm (192px)</span>
-                <span>48mm (384px)</span>
-              </div>
-              <!-- EL CANVAS MAESTRO DE 384 PÍXELES DE ANCHO -->
-              <canvas id="masterThermalCanvas" width="384" height="260" class="pixelated w-full h-auto border border-stone-300/80 bg-white"></canvas>
+        <!-- PANEL 1: EDITOR DE TEXTO / NOTAS -->
+        <section id="panel-note" class="space-y-3 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Nota / Etiqueta</label>
+                <div class="flex gap-1">
+                    <button onclick="insertTemplate('todo')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition">
+                        + Checklist
+                    </button>
+                    <button onclick="insertTemplate('receipt')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700 transition">
+                        + Ticket
+                    </button>
+                </div>
             </div>
-            <div class="receipt-zig-bottom"></div>
-          </div>
-        </div>
 
-        <!-- Resumen de transmisión estimado -->
-        <div class="grid grid-cols-3 gap-2 text-center bg-slate-950/60 p-2 rounded-xl border border-slate-800 font-mono text-[11px]">
-          <div>
-            <span class="block text-[9px] text-slate-400 uppercase">Payload Total</span>
-            <span id="statBytes" class="text-slate-200 font-bold">11.5 KB</span>
-          </div>
-          <div>
-            <span class="block text-[9px] text-slate-400 uppercase">Bandas GS v 0</span>
-            <span id="statBands" class="text-slate-200 font-bold">10 bandas</span>
-          </div>
-          <div>
-            <span class="block text-[9px] text-slate-400 uppercase">Tiempo Est.</span>
-            <span id="statTime" class="text-sky-400 font-bold">~4.2 s</span>
-          </div>
+            <textarea id="noteInput" rows="4" oninput="renderToThermalCanvas()" placeholder="Escribe aquí lo que quieras imprimir..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-fuchsia-500 font-mono">¡Hola desde mi iPhone! 🐱
+--------------------------
+Impresora: YHK Cat Printer
+Protocolo: ESC/POS (GS v 0)
+Ancho: 384 dots (48mm)
+--------------------------
+[x] Ingeniería Inversa OK
+[x] Conectado vía Bluefy</textarea>
+
+            <!-- Controles tipográficos -->
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">Tamaño letra</span>
+                        <span id="fontSizeVal" class="font-mono text-fuchsia-400">24px</span>
+                    </div>
+                    <input type="range" id="fontSizeSlider" min="14" max="64" value="24" oninput="updateTextOptions()" class="w-full accent-fuchsia-500">
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1">Familia / Estilo</span>
+                    <select id="fontFamilySelect" onchange="updateTextOptions()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
+                        <option value="'JetBrains Mono', monospace">Lucida / Consola (Mono)</option>
+                        <option value="'Inter', sans-serif">Inter Sans (Moderna)</option>
+                        <option value="Georgia, serif">Serif Clásica</option>
+                        <option value="'Impact', sans-serif">Impact (Letrero Grande)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Botones de alineación y estilo -->
+            <div class="flex items-center justify-between gap-2 pt-1">
+                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <button onclick="setTextAlign('left')" id="align-left" class="px-3 py-1 rounded-lg text-xs bg-slate-800 text-fuchsia-400"><i class="ph-bold ph-text-align-left"></i></button>
+                    <button onclick="setTextAlign('center')" id="align-center" class="px-3 py-1 rounded-lg text-xs text-slate-400"><i class="ph-bold ph-text-align-center"></i></button>
+                    <button onclick="setTextAlign('right')" id="align-right" class="px-3 py-1 rounded-lg text-xs text-slate-400"><i class="ph-bold ph-text-align-right"></i></button>
+                </div>
+
+                <div class="flex gap-1.5">
+                    <button onclick="toggleTextBold()" id="btnBold" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-fuchsia-500/40 bg-fuchsia-500/20 text-fuchsia-300">
+                        B Negrita
+                    </button>
+                    <button onclick="toggleTextBorder()" id="btnBorder" class="px-3 py-1.5 rounded-xl text-xs border border-slate-800 bg-slate-950 text-slate-400">
+                        Marco
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL 2: IMAGEN / FOTO -->
+        <section id="panel-photo" class="hidden space-y-3 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <div class="flex items-center justify-between">
+                <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Subir Foto o Imagen</label>
+                <button onclick="loadDemoTurtle()" class="text-xs text-fuchsia-400 hover:underline flex items-center gap-1">
+                    <i class="ph-bold ph-sparkle"></i> Cargar Tortuga Demo
+                </button>
+            </div>
+
+            <label class="flex flex-col items-center justify-center border-2 border-dashed border-slate-700 hover:border-fuchsia-500 rounded-2xl p-5 cursor-pointer transition bg-slate-950/50">
+                <i class="ph-duotone ph-camera-plus text-3xl text-fuchsia-400 mb-1"></i>
+                <span class="text-xs font-medium text-slate-200">Toca para elegir foto o tomar con cámara</span>
+                <span class="text-[11px] text-slate-500 mt-0.5">Se auto-ajustará a 384 píxeles de ancho</span>
+                <input type="file" id="imageLoader" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+            </label>
+        </section>
+
+        <!-- PANEL 3: DIBUJO A MANO ALZADA -->
+        <section id="panel-draw" class="hidden space-y-3 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pizarra Libre</span>
+                <div class="flex gap-1.5">
+                    <button onclick="setBrushMode('draw')" id="brushDrawBtn" class="px-2.5 py-1 rounded-lg text-xs bg-fuchsia-600 text-white font-medium">Lápiz</button>
+                    <button onclick="setBrushMode('erase')" id="brushEraseBtn" class="px-2.5 py-1 rounded-lg text-xs bg-slate-800 text-slate-300">Goma</button>
+                    <button onclick="clearSketchPad()" class="px-2.5 py-1 rounded-lg text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30">Borrar</button>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl overflow-hidden border-2 border-slate-700 touch-none">
+                <canvas id="sketchCanvas" width="384" height="260" class="w-full h-auto block cursor-crosshair"></canvas>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-400">Grosor trazo:</span>
+                <input type="range" id="brushSize" min="2" max="24" value="6" class="flex-1 accent-fuchsia-500">
+            </div>
+        </section>
+
+        <!-- PANEL 4: GENERADOR QR Y BANNERS -->
+        <section id="panel-qr" class="hidden space-y-3 bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Generador de Código QR con Etiqueta</label>
+            <input type="text" id="qrText" value="https://github.com/abhigkar/YHK-Cat-Thermal-Printer" oninput="renderToThermalCanvas()" placeholder="URL, clave Wi-Fi o texto para el QR..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-500">
+            <input type="text" id="qrCaption" value="ESCÁNAME CON TU CÁMARA" oninput="renderToThermalCanvas()" placeholder="Subtítulo debajo del QR..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-500">
+            <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-slate-400">Tamaño del QR:</span>
+                <input type="range" id="qrScale" min="160" max="340" value="240" oninput="renderToThermalCanvas()" class="w-44 accent-fuchsia-500">
+            </div>
+        </section>
+
+        <!-- PROCESAMIENTO DE IMAGEN (DITHERING 1-BIT & PROTOCOLO) -->
+        <section class="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <i class="ph-bold ph-sliders-horizontal text-fuchsia-400"></i>
+                    Ajustes de tramado 1-Bit (384 dots)
+                </span>
+                <button onclick="resetAdjustments()" class="text-[11px] text-slate-400 hover:text-white">Restaurar</button>
+            </div>
+
+            <!-- Algoritmo de tramado -->
+            <div class="grid grid-cols-3 gap-1.5">
+                <button onclick="setDitherMode('threshold')" id="dither-threshold" class="py-1.5 px-2 rounded-xl text-[11px] font-medium border border-fuchsia-500/50 bg-fuchsia-500/20 text-fuchsia-300">
+                    Nítido (Texto)
+                </button>
+                <button onclick="setDitherMode('floyd')" id="dither-floyd" class="py-1.5 px-2 rounded-xl text-[11px] font-medium border border-slate-800 bg-slate-950 text-slate-400">
+                    Floyd-Steinberg
+                </button>
+                <button onclick="setDitherMode('atkinson')" id="dither-atkinson" class="py-1.5 px-2 rounded-xl text-[11px] font-medium border border-slate-800 bg-slate-950 text-slate-400">
+                    Atkinson (Mac)
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">Umbral / Oscuridad</span>
+                        <span id="thresholdVal" class="font-mono text-fuchsia-400">128</span>
+                    </div>
+                    <input type="range" id="thresholdSlider" min="20" max="235" value="128" oninput="renderToThermalCanvas()" class="w-full accent-fuchsia-500">
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-slate-400">Contraste</span>
+                        <span id="contrastVal" class="font-mono text-fuchsia-400">0</span>
+                    </div>
+                    <input type="range" id="contrastSlider" min="-80" max="80" value="0" oninput="renderToThermalCanvas()" class="w-full accent-fuchsia-500">
+                </div>
+            </div>
+
+            <!-- Switches de rotación e inversión -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+                <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                    <input type="checkbox" id="chkRotate180" onchange="renderToThermalCanvas()" class="rounded accent-fuchsia-500 w-4 h-4">
+                    <span>Rotar 180° (Boca abajo)</span>
+                </label>
+                <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+                    <input type="checkbox" id="chkInvert" onchange="renderToThermalCanvas()" class="rounded accent-fuchsia-500 w-4 h-4">
+                    <span>Invertir B/N</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- VISTA PREVIA REAL DEL PAPEL TÉRMICO (58MM / 384 DOTS) -->
+        <section class="space-y-2">
+            <div class="flex items-center justify-between px-1">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <i class="ph-fill ph-receipt text-fuchsia-400"></i>
+                    Vista Previa Real 1-Bit
+                </span>
+                <span id="dimensionsBadge" class="text-[11px] font-mono text-slate-400">384 × 200 px (48 bytes/fila)</span>
+            </div>
+
+            <!-- Simulación del rollo de papel -->
+            <div class="bg-slate-900 p-4 rounded-3xl border border-slate-800 flex flex-col items-center shadow-inner">
+                <div class="w-full max-w-[384px] bg-white text-black shadow-2xl overflow-hidden relative">
+                    <div class="receipt-jagged-top h-3 w-full"></div>
+                    <div class="p-0 flex justify-center bg-white">
+                        <!-- Este canvas siempre tiene 384px reales de ancho (como el cabezal térmico) -->
+                        <canvas id="thermalCanvas" width="384" height="220" class="thermal-preview w-full h-auto block"></canvas>
+                    </div>
+                    <div class="receipt-jagged-bottom h-3 w-full"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AJUSTES AVANZADOS DE PROTOCOLO YHK / BLE (Acordeón) -->
+        <details class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden group">
+            <summary class="px-4 py-3 text-xs font-semibold text-slate-300 flex items-center justify-between cursor-pointer select-none">
+                <span class="flex items-center gap-2">
+                    <i class="ph-bold ph-cpu text-fuchsia-400 text-base"></i>
+                    Configuración Técnica YHK (ESC/POS & BLE)
+                </span>
+                <i class="ph-bold ph-caret-down transition group-open:rotate-180"></i>
+            </summary>
+            <div class="px-4 pb-4 pt-2 border-t border-slate-800/80 space-y-3 text-xs text-slate-400">
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Basado en <code class="text-fuchsia-300">YHK-Cat-Thermal-Printer</code>: inicializa con <code class="text-fuchsia-300">1B 40</code>, ajusta densidad térmica con <code class="text-fuchsia-300">1D 49 F0 n</code> y transmite bloques raster <code class="text-fuchsia-300">GS v 0 (1D 76 30 00 30 00 yL yH)</code> sobre el canal BLE ISSC (<code class="text-fuchsia-300">49535343...</code>).
+                </p>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-300 mb-1">Tamaño de Paquete BLE (MTU)</label>
+                        <select id="chunkSizeSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                            <option value="96">96 bytes (Seguro)</option>
+                            <option value="128" selected>128 bytes (Recomendado iOS)</option>
+                            <option value="180">180 bytes (Rápido)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-300 mb-1">Pausa entre paquetes (ms)</label>
+                        <select id="chunkDelaySelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                            <option value="12">12 ms (Rápido)</option>
+                            <option value="20" selected>20 ms (Estable YHK)</option>
+                            <option value="35">35 ms (Evita sobrecalentar)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-300 mb-1">Líneas por bloque GS v 0</label>
+                        <select id="bandLinesSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                            <option value="64">Bandas de 64 líneas</option>
+                            <option value="128" selected>Bandas de 128 líneas</option>
+                            <option value="9999">Imagen completa en 1 comando</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-300 mb-1">Densidad Térmica (Calor)</label>
+                        <select id="heatDensitySelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                            <option value="1">Suave (Ahorro batería)</option>
+                            <option value="2" selected>Normal (Estándar YHK)</option>
+                            <option value="3">Alta (Negro intenso)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Consola de depuración en vivo -->
+                <div class="pt-1">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[11px] font-mono text-slate-400">Registro de paquetes Bluetooth:</span>
+                        <button onclick="clearLog()" class="text-[10px] text-fuchsia-400">Limpiar</button>
+                    </div>
+                    <div id="debugLog" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 h-28 overflow-y-auto font-mono text-[10px] text-emerald-400 space-y-1">
+                        <div>[SISTEMA] YHK Cat Printer Studio listo.</div>
+                        <div>[INFO] Esperando conexión en Bluefy...</div>
+                    </div>
+                </div>
+            </div>
+        </details>
+    </main>
+
+    <!-- BARRA INFERIOR FIJA DE IMPRESIÓN -->
+    <footer class="fixed bottom-0 inset-x-0 z-30 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-4 py-3">
+        <div class="max-w-lg mx-auto">
+            <!-- Barra de progreso durante la impresión -->
+            <div id="printProgressContainer" class="hidden mb-2.5">
+                <div class="flex justify-between text-[11px] font-mono text-fuchsia-300 mb-1">
+                    <span id="printProgressLabel">Enviando datos a YHK...</span>
+                    <span id="printProgressPct">0%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="printProgressBar" class="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500 w-0 transition-all duration-150"></div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <button onclick="feedPaper(3)" id="btnFeed" class="px-4 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-semibold text-xs flex items-center gap-1.5 border border-slate-700 transition shrink-0">
+                    <i class="ph-bold ph-arrow-down text-base text-fuchsia-400"></i>
+                    <span>Avanzar Papel</span>
+                </button>
+
+                <button onclick="printCanvasToYHK()" id="btnPrint" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 active:scale-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xl shadow-fuchsia-600/30 transition">
+                    <i class="ph-bold ph-printer text-lg"></i>
+                    <span>Imprimir en YHK</span>
+                </button>
+            </div>
         </div>
-      </div>
+    </footer>
+
+    <!-- MODAL DE MENSAJES (Sin usar alert) -->
+    <div id="toastModal" class="fixed top-16 inset-x-0 z-50 flex justify-center px-4 pointer-events-none opacity-0 -translate-y-3 transition-all duration-200">
+        <div id="toastBox" class="bg-slate-900 border border-fuchsia-500/40 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-medium pointer-events-auto max-w-sm">
+            <i id="toastIcon" class="ph-fill ph-info text-lg text-fuchsia-400"></i>
+            <span id="toastText">Notificación</span>
+        </div>
     </div>
 
-  </main>
-
-  <!-- BARRA INFERIOR FIJA DE IMPRESIÓN Y PROGRESO EN TIEMPO REAL -->
-  <footer class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-3 py-2.5">
-    <div class="max-w-5xl mx-auto">
-      <!-- Barra de progreso activa durante la impresión -->
-      <div id="printProgressContainer" class="hidden mb-2 space-y-1">
-        <div class="flex justify-between items-center text-xs font-mono">
-          <span id="printProgressLabel" class="text-sky-300">Enviando banda 1/12...</span>
-          <span id="printProgressPercent" class="text-white font-bold">0%</span>
-        </div>
-        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div id="printProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-150" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <!-- Botón principal de Impresión -->
-        <button id="btnPrintMain" onclick="PrinterEngine.printCurrentCanvas()" class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-300 hover:to-emerald-300 active:scale-[0.99] text-slate-950 font-black text-sm tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-          </svg>
-          <span id="btnPrintMainText">IMPRIMIR AHORA (384 PX)</span>
-        </button>
-
-        <!-- Botón de Parada de Emergencia (visible mientras imprime) -->
-        <button id="btnAbortPrint" onclick="PrinterEngine.abortPrint()" class="hidden py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider transition">
-          ✕ Detener
-        </button>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ===================================================================== -->
-  <!-- LÓGICA COMPLETA MODULAR (BLE GATT, ESC/POS, IMAGEN 1-BIT Y TEXTO)     -->
-  <!-- ===================================================================== -->
-  <script>
-    const PRINTER_WIDTH = 384; // 48 mm @ 203 DPI = 384 puntos = 48 bytes por fila
-    const BYTES_PER_ROW = 48;
-
-    /**
-     * Sistema de registro en consola integrada
-     */
-    const Logger = {
-      log(msg, type = 'info') {
-        const box = document.getElementById('bleConsoleLog');
-        if (!box) return;
-        const time = new Date().toLocaleTimeString('es-ES', { hour12: false });
-        const colors = {
-          info: 'text-slate-300',
-          ok: 'text-emerald-400',
-          warn: 'text-amber-400',
-          err: 'text-rose-400',
-          rx: 'text-purple-400'
-        };
-        const line = document.createElement('div');
-        line.className = `${colors[type] || 'text-slate-300'} break-all`;
-        line.textContent = `[${time}] ${msg}`;
-        box.appendChild(line);
-        box.scrollTop = box.scrollHeight;
-      },
-      clear() {
-        const box = document.getElementById('bleConsoleLog');
-        if (box) box.innerHTML = '';
-      }
-    };
-
-    /**
-     * Gestión de interfaz y notificaciones sin alert()
-     */
-    const UI = {
-      activeTab: 'image',
-      toastTimer: null,
-
-      switchTab(tab) {
-        this.activeTab = tab;
-        ['image', 'text', 'engine'].forEach(t => {
-          const panel = document.getElementById(`panel_${t}`);
-          const btn = document.getElementById(`tabBtn_${t}`);
-          if (t === tab) {
-            panel.classList.remove('hidden');
-            btn.className = 'py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-sky-500 text-slate-950 shadow transition';
-          } else {
-            panel.classList.add('hidden');
-            btn.className = 'py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 text-slate-300 hover:text-white transition';
-          }
-        });
-
-        if (tab === 'image') ImageModule.render();
-        if (tab === 'text') TextModule.render();
-      },
-
-      toast(message, type = 'info') {
-        const banner = document.getElementById('toastBanner');
-        const icon = document.getElementById('toastIcon');
-        const text = document.getElementById('toastMessage');
-
-        const styles = {
-          info: 'bg-slate-900/95 border-sky-500/50 text-sky-100',
-          ok: 'bg-emerald-950/95 border-emerald-500/60 text-emerald-100',
-          warn: 'bg-amber-950/95 border-amber-500/60 text-amber-100',
-          err: 'bg-rose-950/95 border-rose-500/60 text-rose-100'
-        };
-        const icons = { info: 'ℹ️', ok: '✅', warn: '⚠️', err: '🚨' };
-
-        banner.className = `fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md rounded-2xl p-3 shadow-2xl border backdrop-blur-md transition-all duration-200 ${styles[type] || styles.info}`;
-        icon.textContent = icons[type] || 'ℹ️';
-        text.textContent = message;
-        banner.classList.remove('hidden');
-
-        clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => this.hideToast(), 4500);
-      },
-
-      hideToast() {
-        document.getElementById('toastBanner')?.classList.add('hidden');
-      },
-
-      updateConnectionStatus(connected, deviceName = '') {
-        const dot = document.getElementById('bleStatusDot');
-        const label = document.getElementById('bleDeviceLabel');
-        const btnText = document.getElementById('btnConnectText');
-        const btn = document.getElementById('btnConnectYHK');
-
-        if (connected) {
-          dot.className = 'absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse';
-          label.textContent = `Conectado: ${deviceName || 'YHK-TNN00000'}`;
-          label.className = 'text-[11px] text-emerald-400 font-mono truncate max-w-[180px] sm:max-w-xs';
-          btnText.textContent = 'Desconectar';
-          btn.className = 'px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-950 text-emerald-300 hover:text-rose-300 border border-emerald-500/40 font-bold text-xs flex items-center gap-1.5 transition';
-        } else {
-          dot.className = 'absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-slate-900';
-          label.textContent = 'Desconectado (Listo para Bluefy)';
-          label.className = 'text-[11px] text-slate-400 font-mono truncate max-w-[180px] sm:max-w-xs';
-          btnText.textContent = 'Conectar YHK';
-          btn.className = 'px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-sky-500/20 transition';
-        }
-      }
-    };
-
-    /**
-     * Configuración persistente del Motor BLE y ESC/POS
-     */
-    const EngineConfig = {
-      chunkSize: 36,
-      chunkDelay: 16,
-      rowsPerBand: 24,
-      bandDelay: 35,
-      writeMode: 'auto',
-      rasterMode: 0,
-      adaptiveThermal: true,
-      densityCmd: 'none',
-      feedAfter: 4,
-      serviceUuid: '49535343-fe7d-4ae5-8fa9-9fafd205e455',
-      txUuid: '49535343-8841-43f4-a8d4-ecbe34729bb3',
-      rxUuid: '49535343-1e4d-4bd9-ba61-23c647249616',
-
-      init() {
-        try {
-          const saved = localStorage.getItem('yhk_engine_config_v1');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            Object.assign(this, parsed);
-          }
-        } catch (e) {
-          console.warn('No se pudo leer localStorage', e);
-        }
-        this.syncToUI();
-      },
-
-      syncToUI() {
-        const setVal = (id, val) => {
-          const el = document.getElementById(id);
-          if (el) el.value = val;
-        };
-        setVal('cfgChunkSize', this.chunkSize);
-        setVal('cfgChunkDelay', this.chunkDelay);
-        setVal('cfgRowsPerBand', this.rowsPerBand);
-        setVal('cfgBandDelay', this.bandDelay);
-        setVal('cfgWriteMode', this.writeMode);
-        setVal('cfgRasterMode', this.rasterMode);
-        setVal('cfgDensityCmd', this.densityCmd);
-        setVal('cfgFeedAfter', this.feedAfter);
-        setVal('cfgServiceUuid', this.serviceUuid);
-        setVal('cfgTxUuid', this.txUuid);
-        setVal('cfgRxUuid', this.rxUuid);
-
-        const chk = document.getElementById('cfgAdaptiveThermal');
-        if (chk) chk.checked = this.adaptiveThermal;
-
-        this.updateLabels();
-      },
-
-      updateFromUI() {
-        this.chunkSize = parseInt(document.getElementById('cfgChunkSize').value, 10) || 36;
-        this.chunkDelay = parseInt(document.getElementById('cfgChunkDelay').value, 10) || 16;
-        this.rowsPerBand = parseInt(document.getElementById('cfgRowsPerBand').value, 10) || 24;
-        this.bandDelay = parseInt(document.getElementById('cfgBandDelay').value, 10) || 35;
-        this.writeMode = document.getElementById('cfgWriteMode').value;
-        this.rasterMode = parseInt(document.getElementById('cfgRasterMode').value, 10) || 0;
-        this.adaptiveThermal = document.getElementById('cfgAdaptiveThermal').checked;
-        this.densityCmd = document.getElementById('cfgDensityCmd').value;
-        this.feedAfter = parseInt(document.getElementById('cfgFeedAfter').value, 10) || 0;
-        this.serviceUuid = document.getElementById('cfgServiceUuid').value.trim().toLowerCase();
-        this.txUuid = document.getElementById('cfgTxUuid').value.trim().toLowerCase();
-        this.rxUuid = document.getElementById('cfgRxUuid').value.trim().toLowerCase();
-
-        this.updateLabels();
-        Telemetry.updateStats();
-
-        try {
-          localStorage.setItem('yhk_engine_config_v1', JSON.stringify(this));
-        } catch (e) {}
-      },
-
-      updateLabels() {
-        document.getElementById('val_cfgChunkSize').textContent = `${this.chunkSize} Bytes`;
-        document.getElementById('val_cfgChunkDelay').textContent = `${this.chunkDelay} ms`;
-        document.getElementById('val_cfgRowsPerBand').textContent = `${this.rowsPerBand} filas`;
-        document.getElementById('val_cfgBandDelay').textContent = `${this.bandDelay} ms`;
-        document.getElementById('val_cfgFeedAfter').textContent = `${this.feedAfter} líneas`;
-      }
-    };
-
-    /**
-     * Gestor de Perfiles Maestros (Eco Extremo, Eco Diario, Anti-Fallos, Foto HQ, Texto HD)
-     */
-    const PresetManager = {
-      apply(presetId) {
-        // Actualizar estilo visual de los botones de preset
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-          btn.className = 'preset-btn text-left p-2 rounded-xl border border-slate-800 bg-slate-950/60 transition';
-        });
-        const activeBtn = document.getElementById(`preset_${presetId}`);
-        if (activeBtn) {
-          activeBtn.className = 'preset-btn text-left p-2 rounded-xl border border-sky-500/70 bg-sky-500/15 transition';
-        }
-
-        const badge = document.getElementById('activePresetBadge');
-
-        if (presetId === 'eco_extreme') {
-          badge.textContent = '🌱 Eco Extremo (-55% Calor)';
-          // Imagen: Atkinson + 45% reducción de masa negra + gamma clara
-          document.getElementById('imgDitherAlgo').value = 'atkinson';
-          document.getElementById('imgEcoSaver').value = 45;
-          document.getElementById('imgBrightness').value = 12;
-          document.getElementById('imgContrast').value = 10;
-          document.getElementById('imgGamma').value = 0.85;
-          document.getElementById('imgSharpness').value = 20;
-          // Texto: Contorno hueco o semitono
-          document.getElementById('txtRenderStyle').value = 'eco_hollow';
-          // Motor: Densidad baja y fluido
-          EngineConfig.chunkSize = 40;
-          EngineConfig.chunkDelay = 14;
-          EngineConfig.rowsPerBand = 24;
-          EngineConfig.bandDelay = 25;
-          EngineConfig.densityCmd = 'esc7_low';
-          UI.toast('Perfil Eco Extremo activado: mínimo consumo de batería y cabezal frío.', 'ok');
-        } 
-        else if (presetId === 'eco_daily') {
-          badge.textContent = '🍃 Eco Diario (Atkinson)';
-          document.getElementById('imgDitherAlgo').value = 'atkinson';
-          document.getElementById('imgEcoSaver').value = 15;
-          document.getElementById('imgBrightness').value = 5;
-          document.getElementById('imgContrast').value = 15;
-          document.getElementById('imgGamma').value = 1.00;
-          document.getElementById('imgSharpness').value = 25;
-          document.getElementById('txtRenderStyle').value = 'eco_halftone';
-          EngineConfig.chunkSize = 36;
-          EngineConfig.chunkDelay = 15;
-          EngineConfig.rowsPerBand = 24;
-          EngineConfig.bandDelay = 30;
-          EngineConfig.densityCmd = 'none';
-          UI.toast('Perfil Eco Diario activado: difusión Atkinson limpia con 15% de ahorro.', 'ok');
-        }
-        else if (presetId === 'failsafe') {
-          badge.textContent = '🛡️ Modo Anti-Fallos (Seguro)';
-          document.getElementById('imgDitherAlgo').value = 'atkinson';
-          document.getElementById('imgEcoSaver').value = 10;
-          EngineConfig.chunkSize = 28;
-          EngineConfig.chunkDelay = 22;
-          EngineConfig.rowsPerBand = 16;
-          EngineConfig.bandDelay = 45;
-          EngineConfig.writeMode = 'auto';
-          EngineConfig.adaptiveThermal = true;
-          EngineConfig.densityCmd = 'none';
-          UI.toast('Modo Anti-Fallos activado: paquetes de 28B y bandas de 16 filas a prueba de cortes.', 'ok');
-        }
-        else if (presetId === 'hq_photo') {
-          badge.textContent = '💎 Alta Calidad Fotográfica (HQ Pro)';
-          document.getElementById('imgDitherAlgo').value = 'stucki';
-          document.getElementById('imgEcoSaver').value = 0;
-          document.getElementById('imgBrightness').value = 0;
-          document.getElementById('imgContrast').value = 22;
-          document.getElementById('imgGamma').value = 1.15;
-          document.getElementById('imgSharpness').value = 45;
-          document.getElementById('txtRenderStyle').value = 'solid';
-          // Micro-bandas con pausa de estabilización para evitar banding mecánico
-          EngineConfig.chunkSize = 32;
-          EngineConfig.chunkDelay = 18;
-          EngineConfig.rowsPerBand = 16;
-          EngineConfig.bandDelay = 50;
-          EngineConfig.adaptiveThermal = true;
-          EngineConfig.densityCmd = 'esc7_high';
-          UI.toast('Perfil Foto HQ Pro activado: matriz Stucki de 12 vecinos + realce de nitidez.', 'ok');
-        }
-        else if (presetId === 'hq_crisp') {
-          badge.textContent = '✒️ Texto y Líneas HD';
-          document.getElementById('imgDitherAlgo').value = 'threshold';
-          document.getElementById('imgEcoSaver').value = 0;
-          document.getElementById('imgBrightness').value = 0;
-          document.getElementById('imgContrast').value = 40;
-          document.getElementById('imgSharpness').value = 60;
-          document.getElementById('txtRenderStyle').value = 'solid';
-          EngineConfig.chunkSize = 36;
-          EngineConfig.chunkDelay = 16;
-          EngineConfig.rowsPerBand = 24;
-          EngineConfig.bandDelay = 35;
-          EngineConfig.densityCmd = 'esc7_med';
-          UI.toast('Perfil Texto/Línea HD activado: bordes puros sin ruido de puntos.', 'ok');
-        }
-
-        EngineConfig.syncToUI();
-        if (UI.activeTab === 'image') ImageModule.render();
-        if (UI.activeTab === 'text') TextModule.render();
-      }
-    };
-
-    /**
-     * Telemetría del bitmap 1-bit actual (cálculo de carga térmica, bytes y tiempo)
-     */
-    const Telemetry = {
-      currentPackedBytes: null, // Uint8Array de (48 * height) bytes
-      currentHeight: 0,
-      blackRatio: 0,
-      rowDensities: [], // Array con proporción de negro (0..1) por cada fila
-
-      analyzeFromCanvas(canvas) {
-        const w = PRINTER_WIDTH;
-        const h = canvas.height;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        const imgData = ctx.getImageData(0, 0, w, h).data;
-
-        const packed = new Uint8Array(BYTES_PER_ROW * h);
-        const rowDensities = new Float32Array(h);
-        let totalBlackPixels = 0;
-
-        for (let y = 0; y < h; y++) {
-          let rowBlack = 0;
-          for (let byteIdx = 0; byteIdx < BYTES_PER_ROW; byteIdx++) {
-            let byteVal = 0;
-            for (let bit = 0; bit < 8; bit++) {
-              const x = byteIdx * 8 + bit;
-              const pixelOffset = (y * w + x) * 4;
-              // Si el canal rojo es oscuro (<128) y alfa es visible, es un punto negro quemado (bit = 1)
-              const isBlack = imgData[pixelOffset + 3] > 128 && imgData[pixelOffset] < 128;
-              if (isBlack) {
-                byteVal |= (1 << (7 - bit));
-                rowBlack++;
-                totalBlackPixels++;
-              }
-            }
-            packed[y * BYTES_PER_ROW + byteIdx] = byteVal;
-          }
-          rowDensities[y] = rowBlack / w;
-        }
-
-        this.currentPackedBytes = packed;
-        this.currentHeight = h;
-        this.blackRatio = totalBlackPixels / (w * h);
-        this.rowDensities = rowDensities;
-
-        this.updateStats();
-      },
-
-      updateStats() {
-        const h = this.currentHeight || 200;
-        const mmHeight = Math.round((h / 203) * 25.4);
-        document.getElementById('previewDimensionsText').textContent = `${PRINTER_WIDTH} × ${h} px · ~${mmHeight} mm de papel`;
-
-        // Carga térmica porcentual
-        const pct = Math.round(this.blackRatio * 100);
-        const badge = document.getElementById('thermalLoadBadge');
-        const bar = document.getElementById('thermalLoadBar');
-        bar.style.width = `${Math.min(100, Math.max(4, pct))}%`;
-
-        if (pct < 28) {
-          badge.textContent = `${pct}% (Fría / Eco)`;
-          badge.className = 'text-xs font-mono font-bold text-emerald-400';
-          bar.className = 'h-full bg-emerald-400 transition-all duration-300';
-        } else if (pct < 52) {
-          badge.textContent = `${pct}% (Media)`;
-          badge.className = 'text-xs font-mono font-bold text-amber-400';
-          bar.className = 'h-full bg-amber-400 transition-all duration-300';
-        } else {
-          badge.textContent = `${pct}% (Alta · Pausa Auto)`;
-          badge.className = 'text-xs font-mono font-bold text-rose-400';
-          bar.className = 'h-full bg-rose-500 transition-all duration-300';
-        }
-
-        // Estadísticas de transmisión
-        const totalBytes = h * BYTES_PER_ROW;
-        const bands = Math.ceil(h / EngineConfig.rowsPerBand);
-        const chunks = Math.ceil((totalBytes + bands * 8) / EngineConfig.chunkSize);
-        const estMs = (chunks * EngineConfig.chunkDelay) + (bands * EngineConfig.bandDelay);
-
-        document.getElementById('statBytes').textContent = `${(totalBytes / 1024).toFixed(1)} KB`;
-        document.getElementById('statBands').textContent = `${bands} bandas`;
-        document.getElementById('statTime').textContent = `~${(estMs / 1000).toFixed(1)} s`;
-      }
-    };
-
-    /**
-     * =========================================================================
-     * MÓDULO 1: PROCESAMIENTO AVANZADO DE IMAGEN Y TRAMADO 1-BIT (DITHERING)
-     * =========================================================================
-     */
-    const ImageModule = {
-      sourceImage: null,
-      rotation: 0,
-      flipH: false,
-      flipV: false,
-      align: 'center',
-
-      init() {
-        this.loadTestPattern('calibration');
-      },
-
-      handleFileUpload(event) {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            this.sourceImage = img;
-            this.rotation = 0;
-            this.render();
-            UI.toast(`Imagen cargada (${img.width}×${img.height}px)`, 'ok');
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      },
-
-      rotate(deg) {
-        this.rotation = (this.rotation + deg + 360) % 360;
-        this.render();
-      },
-
-      toggleFlipH() {
-        this.flipH = !this.flipH;
-        document.getElementById('btnFlipH').classList.toggle('bg-sky-500/30', this.flipH);
-        this.render();
-      },
-
-      toggleFlipV() {
-        this.flipV = !this.flipV;
-        document.getElementById('btnFlipV').classList.toggle('bg-sky-500/30', this.flipV);
-        this.render();
-      },
-
-      setAlign(align) {
-        this.align = align;
-        ['left', 'center', 'right'].forEach(a => {
-          const btn = document.getElementById(`imgAlign_${a}`);
-          if (a === align) {
-            btn.className = 'py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/50 text-xs text-sky-300 font-bold';
-          } else {
-            btn.className = 'py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300';
-          }
-        });
-        this.render();
-      },
-
-      resetFilters() {
-        document.getElementById('imgBrightness').value = 0;
-        document.getElementById('imgContrast').value = 10;
-        document.getElementById('imgGamma').value = 1.10;
-        document.getElementById('imgSharpness').value = 25;
-        document.getElementById('imgScale').value = 100;
-        document.getElementById('imgEcoSaver').value = 0;
-        document.getElementById('imgThreshold').value = 128;
-        document.getElementById('imgInvert').checked = false;
-        document.getElementById('imgTrimWhite').checked = false;
-        document.getElementById('imgAddBorder').checked = false;
-        this.rotation = 0;
-        this.flipH = false;
-        this.flipV = false;
-        this.render();
-      },
-
-      /**
-       * Genera patrones sintéticos de calibración o arte para probar sin subir foto
-       */
-      loadTestPattern(type) {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = 384;
-        tempCanvas.height = 280;
-        const ctx = tempCanvas.getContext('2d');
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 384, 280);
-
-        if (type === 'calibration') {
-          // Marco exterior exacto de 384px
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(1.5, 1.5, 381, 277);
-
-          // Encabezado
-          ctx.fillStyle = '#000000';
-          ctx.font = 'bold 20px Inter, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('YHK-TNN00000 · 384 PX', 192, 30);
-
-          ctx.font = '12px JetBrains Mono, monospace';
-          ctx.fillText('48mm Efectivos · 203 DPI · 48 Bytes/Fila', 192, 48);
-
-          // Rampa continua de grises para probar los algoritmos de Dithering
-          const grad = ctx.createLinearGradient(16, 0, 368, 0);
-          grad.addColorStop(0, '#000000');
-          grad.addColorStop(0.5, '#808080');
-          grad.addColorStop(1, '#ffffff');
-          ctx.fillStyle = grad;
-          ctx.fillRect(16, 62, 352, 38);
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(16, 62, 352, 38);
-
-          // Bloques de pasos de gris (100%, 80%, 60%, 40%, 20%, 5%)
-          const steps = [0, 51, 102, 153, 204, 240];
-          steps.forEach((val, idx) => {
-            ctx.fillStyle = `rgb(${val},${val},${val})`;
-            ctx.fillRect(16 + idx * 58.6, 110, 56, 36);
-            ctx.strokeRect(16 + idx * 58.6, 110, 56, 36);
-          });
-
-          // Esferas sombreadas 3D para evaluar difusión de error
-          for (let i = 0; i < 3; i++) {
-            const cx = 75 + i * 115;
-            const cy = 205;
-            const r = 42;
-            const radGrad = ctx.createRadialGradient(cx - 14, cy - 14, 4, cx, cy, r);
-            radGrad.addColorStop(0, '#ffffff');
-            radGrad.addColorStop(0.45, '#777777');
-            radGrad.addColorStop(0.85, '#151515');
-            radGrad.addColorStop(1, '#000000');
-            ctx.fillStyle = radGrad;
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Regla de resolución de 1 píxel
-          ctx.fillStyle = '#000000';
-          for (let x = 16; x < 368; x += 2) {
-            ctx.fillRect(x, 258, 1, 12);
-          }
-        } else {
-          // Paisaje artístico con gradientes ricos para probar modos Eco vs Foto HQ
-          const sky = ctx.createLinearGradient(0, 0, 0, 170);
-          sky.addColorStop(0, '#111111');
-          sky.addColorStop(0.6, '#888888');
-          sky.addColorStop(1, '#f0f0f0');
-          ctx.fillStyle = sky;
-          ctx.fillRect(0, 0, 384, 180);
-
-          // Sol con halo
-          const sun = ctx.createRadialGradient(192, 95, 10, 192, 95, 75);
-          sun.addColorStop(0, '#ffffff');
-          sun.addColorStop(0.4, '#e0e0e0');
-          sun.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = sun;
-          ctx.beginPath();
-          ctx.arc(192, 95, 75, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Montañas con distintas densidades de gris
-          const drawMountain = (pts, color) => {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(pts[0][0], pts[0][1]);
-            pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1]));
-            ctx.closePath();
-            ctx.fill();
-          };
-          drawMountain([[0,190], [90,105], [185,165], [290,90], [384,175], [384,280], [0,280]], '#555555');
-          drawMountain([[0,215], [130,135], [240,195], [335,130], [384,190], [384,280], [0,280]], '#222222');
-
-          // Ondas de agua en primer plano
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 215, 384, 65);
-          ctx.fillStyle = '#111111';
-          for (let y = 222; y < 275; y += 6) {
-            ctx.fillRect(20 + (y % 12) * 3, y, 340 - (y % 18) * 4, 2);
-          }
-        }
-
-        const img = new Image();
-        img.onload = () => {
-          this.sourceImage = img;
-          this.rotation = 0;
-          this.render();
-        };
-        img.src = tempCanvas.toDataURL();
-      },
-
-      /**
-       * Renderiza la imagen con todos los filtros tonales, nitidez, tramado 1-bit y ahorro térmico
-       */
-      render() {
-        if (!this.sourceImage || UI.activeTab !== 'image') return;
-
-        // Leer parámetros UI
-        const ditherAlgo = document.getElementById('imgDitherAlgo').value;
-        const ecoSaver = parseInt(document.getElementById('imgEcoSaver').value, 10) || 0;
-        const threshold = parseInt(document.getElementById('imgThreshold').value, 10) || 128;
-        const brightness = parseInt(document.getElementById('imgBrightness').value, 10) || 0;
-        const contrast = parseInt(document.getElementById('imgContrast').value, 10) || 0;
-        const gamma = parseFloat(document.getElementById('imgGamma').value) || 1.0;
-        const sharpness = parseInt(document.getElementById('imgSharpness').value, 10) || 0;
-        const scalePct = parseInt(document.getElementById('imgScale').value, 10) || 100;
-        const invert = document.getElementById('imgInvert').checked;
-        const trimWhite = document.getElementById('imgTrimWhite').checked;
-        const addBorder = document.getElementById('imgAddBorder').checked;
-
-        // Actualizar etiquetas numéricas
-        document.getElementById('val_imgEcoSaver').textContent = `${ecoSaver}%`;
-        document.getElementById('val_imgThreshold').textContent = `${threshold}`;
-        document.getElementById('val_imgBrightness').textContent = `${brightness > 0 ? '+' : ''}${brightness}`;
-        document.getElementById('val_imgContrast').textContent = `${contrast > 0 ? '+' : ''}${contrast}`;
-        document.getElementById('val_imgGamma').textContent = gamma.toFixed(2);
-        document.getElementById('val_imgSharpness').textContent = `${sharpness}%`;
-        document.getElementById('val_imgScale').textContent = `${scalePct}%`;
-
-        // Calcular dimensiones rotadas
-        const isRotated90 = (this.rotation === 90 || this.rotation === 270);
-        const srcW = isRotated90 ? this.sourceImage.height : this.sourceImage.width;
-        const srcH = isRotated90 ? this.sourceImage.width : this.sourceImage.height;
-
-        const targetDrawW = Math.max(32, Math.round(PRINTER_WIDTH * (scalePct / 100)));
-        const targetH = Math.max(16, Math.round((srcH / srcW) * targetDrawW));
-
-        // Canvas intermedio en escala de grises de 384px de ancho
-        const workCanvas = document.createElement('canvas');
-        workCanvas.width = PRINTER_WIDTH;
-        workCanvas.height = targetH;
-        const ctx = workCanvas.getContext('2d', { willReadFrequently: true });
-
-        // Fondo blanco por defecto
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, PRINTER_WIDTH, targetH);
-
-        // Posición horizontal según alineación
-        let offsetX = 0;
-        if (this.align === 'center') offsetX = Math.round((PRINTER_WIDTH - targetDrawW) / 2);
-        if (this.align === 'right') offsetX = PRINTER_WIDTH - targetDrawW;
-
-        ctx.save();
-        ctx.translate(offsetX + targetDrawW / 2, targetH / 2);
-        ctx.rotate((this.rotation * Math.PI) / 180);
-        ctx.scale(this.flipH ? -1 : 1, this.flipV ? -1 : 1);
-
-        if (isRotated90) {
-          ctx.drawImage(this.sourceImage, -targetH / 2, -targetDrawW / 2, targetH, targetDrawW);
-        } else {
-          ctx.drawImage(this.sourceImage, -targetDrawW / 2, -targetH / 2, targetDrawW, targetH);
-        }
-        ctx.restore();
-
-        // Extraer píxeles y convertir a luminancia flotante (0..255)
-        const imgData = ctx.getImageData(0, 0, PRINTER_WIDTH, targetH);
-        const data = imgData.data;
-        const w = PRINTER_WIDTH;
-        const h = targetH;
-        let gray = new Float32Array(w * h);
-
-        // Precalcular tabla LUT de Brillo, Contraste y Gamma
-        const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-        const lut = new Float32Array(256);
-        for (let i = 0; i < 256; i++) {
-          let v = i;
-          if (invert) v = 255 - v;
-          // Brillo
-          v += brightness * 1.8;
-          // Contraste
-          v = contrastFactor * (v - 128) + 128;
-          v = Math.max(0, Math.min(255, v));
-          // Corrección Gamma
-          v = 255 * Math.pow(v / 255, 1 / gamma);
-          lut[i] = Math.max(0, Math.min(255, v));
-        }
-
-        for (let i = 0; i < w * h; i++) {
-          const idx = i * 4;
-          const alpha = data[idx + 3] / 255;
-          // Mezclar transparencia sobre papel blanco
-          const r = data[idx] * alpha + 255 * (1 - alpha);
-          const g = data[idx + 1] * alpha + 255 * (1 - alpha);
-          const b = data[idx + 2] * alpha + 255 * (1 - alpha);
-          const lum = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-          gray[i] = lut[lum];
-        }
-
-        // Filtro de Nitidez (Unsharp Mask 3x3) si sharpness > 0
-        if (sharpness > 0) {
-          const amount = (sharpness / 100) * 1.6;
-          const sharpened = new Float32Array(w * h);
-          sharpened.set(gray);
-          for (let y = 1; y < h - 1; y++) {
-            for (let x = 1; x < w - 1; x++) {
-              const i = y * w + x;
-              const center = gray[i];
-              const blur = (gray[i - 1] + gray[i + 1] + gray[i - w] + gray[i + w]) * 0.25;
-              const val = center + (center - blur) * amount;
-              sharpened[i] = Math.max(0, Math.min(255, val));
-            }
-          }
-          gray = sharpened;
-        }
-
-        // Matriz de salida 1-bit: 0 = Negro (quemado), 255 = Blanco (papel)
-        const out1Bit = new Uint8Array(w * h);
-        out1Bit.fill(255);
-
-        // Ejecutar el algoritmo de Binarización / Tramado elegido
-        if (ditherAlgo === 'threshold') {
-          for (let i = 0; i < w * h; i++) {
-            out1Bit[i] = gray[i] < threshold ? 0 : 255;
-          }
-        } 
-        else if (ditherAlgo === 'adaptive') {
-          // Umbral adaptativo por ventana local 15x15 mediante imagen integral
-          const integral = new Float64Array((w + 1) * (h + 1));
-          for (let y = 1; y <= h; y++) {
-            let rowSum = 0;
-            for (let x = 1; x <= w; x++) {
-              rowSum += gray[(y - 1) * w + (x - 1)];
-              integral[y * (w + 1) + x] = integral[(y - 1) * (w + 1) + x] + rowSum;
-            }
-          }
-          const radius = 8;
-          const bias = (128 - threshold) * 0.4 + 7;
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              const x1 = Math.max(0, x - radius);
-              const y1 = Math.max(0, y - radius);
-              const x2 = Math.min(w - 1, x + radius);
-              const y2 = Math.min(h - 1, y + radius);
-              const count = (x2 - x1 + 1) * (y2 - y1 + 1);
-              const sum = integral[(y2 + 1) * (w + 1) + (x2 + 1)]
-                        - integral[y1 * (w + 1) + (x2 + 1)]
-                        - integral[(y2 + 1) * (w + 1) + x1]
-                        + integral[y1 * (w + 1) + x1];
-              const localMean = sum / count;
-              out1Bit[y * w + x] = gray[y * w + x] < (localMean - bias) ? 0 : 255;
-            }
-          }
-        }
-        else if (ditherAlgo === 'edges_eco') {
-          // Detector de contornos Sobel (Ultra-Eco: solo imprime bordes)
-          const edgeThresh = 255 - threshold;
-          for (let y = 1; y < h - 1; y++) {
-            for (let x = 1; x < w - 1; x++) {
-              const gx = -gray[(y - 1) * w + (x - 1)] + gray[(y - 1) * w + (x + 1)]
-                         - 2 * gray[y * w + (x - 1)] + 2 * gray[y * w + (x + 1)]
-                         - gray[(y + 1) * w + (x - 1)] + gray[(y + 1) * w + (x + 1)];
-              const gy = -gray[(y - 1) * w + (x - 1)] - 2 * gray[(y - 1) * w + x] - gray[(y - 1) * w + (x + 1)]
-                         + gray[(y + 1) * w + (x - 1)] + 2 * gray[(y + 1) * w + x] + gray[(y + 1) * w + (x + 1)];
-              const mag = Math.sqrt(gx * gx + gy * gy);
-              out1Bit[y * w + x] = mag > edgeThresh ? 0 : 255;
-            }
-          }
-        }
-        else if (ditherAlgo === 'bayer4') {
-          const bayer4 = [
-            [ 0,  8,  2, 10],
-            [12,  4, 14,  6],
-            [ 3, 11,  1,  9],
-            [15,  7, 13,  5]
-          ];
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              const mapVal = ((bayer4[y & 3][x & 3] + 0.5) / 16) * 255;
-              out1Bit[y * w + x] = gray[y * w + x] < mapVal ? 0 : 255;
-            }
-          }
-        }
-        else if (ditherAlgo === 'bayer8') {
-          const bayer8 = [
-            [ 0,32, 8,40, 2,34,10,42],
-            [48,16,56,24,50,18,58,26],
-            [12,44, 4,36,14,46, 6,38],
-            [60,28,52,20,62,30,54,22],
-            [ 3,35,11,43, 1,33, 9,41],
-            [51,19,59,27,49,17,57,25],
-            [15,47, 7,39,13,45, 5,37],
-            [63,31,55,23,61,29,53,21]
-          ];
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              const mapVal = ((bayer8[y & 7][x & 7] + 0.5) / 64) * 255;
-              out1Bit[y * w + x] = gray[y * w + x] < mapVal ? 0 : 255;
-            }
-          }
-        }
-        else if (ditherAlgo === 'halftone') {
-          // Semitono de punto agrupado (periódico / cómic)
-          const cell = 6;
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              const cx = (x % cell) - (cell - 1) / 2;
-              const cy = (y % cell) - (cell - 1) / 2;
-              const dist = Math.sqrt(cx * cx + cy * cy) / (cell * 0.72);
-              const threshVal = Math.min(250, Math.max(5, dist * 255));
-              out1Bit[y * w + x] = gray[y * w + x] < threshVal ? 0 : 255;
-            }
-          }
-        }
-        else {
-          // Algoritmos de Difusión de Error (Atkinson, Floyd-Steinberg, Stucki, Sierra Lite)
-          const buf = new Float32Array(gray);
-          for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-              const idx = y * w + x;
-              const oldVal = buf[idx];
-              const newVal = oldVal < threshold ? 0 : 255;
-              out1Bit[idx] = newVal;
-              const err = oldVal - newVal;
-
-              if (ditherAlgo === 'atkinson') {
-                // Atkinson difunde solo 6/8 (75%) del error -> evita manchas negras y ahorra batería
-                const e = err / 8;
-                if (x + 1 < w) buf[idx + 1] += e;
-                if (x + 2 < w) buf[idx + 2] += e;
-                if (y + 1 < h) {
-                  if (x - 1 >= 0) buf[idx + w - 1] += e;
-                  buf[idx + w] += e;
-                  if (x + 1 < w) buf[idx + w + 1] += e;
-                }
-                if (y + 2 < h) buf[idx + w * 2] += e;
-              } 
-              else if (ditherAlgo === 'floyd') {
-                if (x + 1 < w) buf[idx + 1] += (err * 7) / 16;
-                if (y + 1 < h) {
-                  if (x - 1 >= 0) buf[idx + w - 1] += (err * 3) / 16;
-                  buf[idx + w] += (err * 5) / 16;
-                  if (x + 1 < w) buf[idx + w + 1] += (err * 1) / 16;
-                }
-              }
-              else if (ditherAlgo === 'sierra') {
-                if (x + 1 < w) buf[idx + 1] += (err * 2) / 4;
-                if (y + 1 < h) {
-                  if (x - 1 >= 0) buf[idx + w - 1] += (err * 1) / 4;
-                  buf[idx + w] += (err * 1) / 4;
-                }
-              }
-              else if (ditherAlgo === 'stucki') {
-                const e = err / 42;
-                if (x + 1 < w) buf[idx + 1] += e * 8;
-                if (x + 2 < w) buf[idx + 2] += e * 4;
-                if (y + 1 < h) {
-                  if (x - 2 >= 0) buf[idx + w - 2] += e * 2;
-                  if (x - 1 >= 0) buf[idx + w - 1] += e * 4;
-                  buf[idx + w] += e * 8;
-                  if (x + 1 < w) buf[idx + w + 1] += e * 4;
-                  if (x + 2 < w) buf[idx + w + 2] += e * 2;
-                }
-                if (y + 2 < h) {
-                  if (x - 2 >= 0) buf[idx + w * 2 - 2] += e * 1;
-                  if (x - 1 >= 0) buf[idx + w * 2 - 1] += e * 2;
-                  buf[idx + w * 2] += e * 4;
-                  if (x + 1 < w) buf[idx + w * 2 + 1] += e * 2;
-                  if (x + 2 < w) buf[idx + w * 2 + 2] += e * 1;
-                }
-              }
-            }
-          }
-        }
-
-        // Filtro Eco-Térmico de reducción de masa negra (preserva el 100% de los bordes)
-        if (ecoSaver > 0) {
-          const copy = new Uint8Array(out1Bit);
-          const bayerEco = [
-            [ 1,  9,  3, 11],
-            [13,  5, 15,  7],
-            [ 4, 12,  2, 10],
-            [16,  8, 14,  6]
-          ];
-          const cutoff = Math.round((ecoSaver / 100) * 16);
-
-          for (let y = 1; y < h - 1; y++) {
-            for (let x = 1; x < w - 1; x++) {
-              const i = y * w + x;
-              if (copy[i] === 0) {
-                // Comprobar si es un píxel interior rodeado de negro (para no romper bordes ni letras finas)
-                const isInterior = copy[i - 1] === 0 && copy[i + 1] === 0 && copy[i - w] === 0 && copy[i + w] === 0;
-                if (isInterior && bayerEco[y & 3][x & 3] <= cutoff) {
-                  out1Bit[i] = 255; // Apagar aguja térmica en este punto interior
-                }
-              }
-            }
-          }
-        }
-
-        // Recorte opcional de márgenes blancos superior e inferior
-        let startY = 0;
-        let endY = h - 1;
-        if (trimWhite) {
-          while (startY < h - 16) {
-            let hasBlack = false;
-            for (let x = 0; x < w; x++) {
-              if (out1Bit[startY * w + x] === 0) { hasBlack = true; break; }
-            }
-            if (hasBlack) break;
-            startY++;
-          }
-          while (endY > startY + 16) {
-            let hasBlack = false;
-            for (let x = 0; x < w; x++) {
-              if (out1Bit[endY * w + x] === 0) { hasBlack = true; break; }
-            }
-            if (hasBlack) break;
-            endY--;
-          }
-          startY = Math.max(0, startY - 6);
-          endY = Math.min(h - 1, endY + 6);
-        }
-
-        const finalH = Math.max(16, endY - startY + 1);
-        const masterCanvas = document.getElementById('masterThermalCanvas');
-        masterCanvas.width = PRINTER_WIDTH;
-        masterCanvas.height = finalH;
-        const mCtx = masterCanvas.getContext('2d');
-        const finalImgData = mCtx.createImageData(PRINTER_WIDTH, finalH);
-
-        for (let y = 0; y < finalH; y++) {
-          const srcRow = (startY + y) * w;
-          for (let x = 0; x < w; x++) {
-            const val = out1Bit[srcRow + x];
-            const dstIdx = (y * w + x) * 4;
-            finalImgData.data[dstIdx] = val;
-            finalImgData.data[dstIdx + 1] = val;
-            finalImgData.data[dstIdx + 2] = val;
-            finalImgData.data[dstIdx + 3] = 255;
-          }
-        }
-
-        mCtx.putImageData(finalImgData, 0, 0);
-
-        if (addBorder) {
-          mCtx.strokeStyle = '#000000';
-          mCtx.lineWidth = 2;
-          mCtx.strokeRect(1, 1, PRINTER_WIDTH - 2, finalH - 2);
-        }
-
-        Telemetry.analyzeFromCanvas(masterCanvas);
-      }
-    };
-
-    /**
-     * =========================================================================
-     * MÓDULO 2: ESTUDIO DE TEXTO, ETIQUETAS Y TICKETS 1-BIT
-     * =========================================================================
-     */
-    const TextModule = {
-      align: 'left',
-      bold: true,
-      italic: false,
-      underline: false,
-
-      setAlign(align) {
-        this.align = align;
-        ['left', 'center', 'right'].forEach(a => {
-          const btn = document.getElementById(`txtAlign_${a}`);
-          btn.className = (a === align)
-            ? 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-slate-950'
-            : 'flex-1 py-1.5 rounded-lg text-xs text-slate-400';
-        });
-        this.render();
-      },
-
-      toggleStyle(style) {
-        this[style] = !this[style];
-        const btn = document.getElementById(`txtStyle_${style}`);
-        if (this[style]) {
-          btn.classList.add('bg-sky-500/20', 'text-sky-300', 'border', 'border-sky-500/40');
-          btn.classList.remove('text-slate-400');
-        } else {
-          btn.classList.remove('bg-sky-500/20', 'text-sky-300', 'border', 'border-sky-500/40');
-          btn.classList.add('text-slate-400');
-        }
-        this.render();
-      },
-
-      loadTemplate(tpl) {
-        const area = document.getElementById('txtContent');
-        if (tpl === 'note') {
-          area.value = "📌 RECORDATORIO\n---\nLlevar paquete a la oficina antes de las 17:00 hrs.\n\nContacto: +56 9 1234 5678";
-          document.getElementById('txtFontSize').value = 28;
-          document.getElementById('txtBorderStyle').value = 'simple';
-          document.getElementById('txtRotateBanner').checked = false;
-          this.setAlign('left');
-        } else if (tpl === 'checklist') {
-          area.value = "🛒 LISTA DE COMPRAS\n---\n[ ] Rollo papel térmico 57mm\n[ ] Café en grano\n[x] Pilas recargables\n[ ] Cinta adhesiva doble faz\n[ ] Fruta y verduras";
-          document.getElementById('txtFontSize').value = 24;
-          document.getElementById('txtBorderStyle').value = 'dashed';
-          document.getElementById('txtRotateBanner').checked = false;
-          this.setAlign('left');
-        } else if (tpl === 'label') {
-          area.value = "FRÁGIL\n---\nMANEJAR CON CUIDADO\nCAJA #04";
-          document.getElementById('txtFontSize').value = 46;
-          document.getElementById('txtBorderStyle').value = 'Warning';
-          document.getElementById('txtRotateBanner').checked = false;
-          this.setAlign('center');
-        } else if (tpl === 'receipt') {
-          area.value = "COMPROBANTE DE ENTREGA\n---\n1x Impresora YHK   $15.990\n3x Rollos 57x30mm   $2.990\n---\nTOTAL PAGADO:      $18.980\n---\n¡Gracias por su preferencia!";
-          document.getElementById('txtFontFamily').value = "'JetBrains Mono', monospace";
-          document.getElementById('txtFontSize').value = 20;
-          document.getElementById('txtBorderStyle').value = 'double';
-          document.getElementById('txtBarcodeValue').value = 'YHK-98412';
-          document.getElementById('txtRotateBanner').checked = false;
-          this.setAlign('left');
-        }
-        this.render();
-      },
-
-      /**
-       * Dibuja un código de barras tipo Code-39/128 simplificado 100% escaneable y nítido en 1-bit
-       */
-      drawBarcodePattern(ctx, text, xCenter, yTop, width, height) {
-        const clean = text.trim().toUpperCase();
-        if (!clean) return 0;
-
-        // Generar secuencia determinista de barras de alta densidad con zonas mudas
-        const bits = [1,0,1,0,1,1,0,1];
-        for (let i = 0; i < clean.length; i++) {
-          const code = clean.charCodeAt(i);
-          bits.push(1, (code >> 6) & 1, 0, (code >> 5) & 1, 1, (code >> 4) & 1, (code >> 3) & 1, 0, (code >> 2) & 1, (code >> 1) & 1, 1, code & 1, 0);
-        }
-        bits.push(1,1,0,1,0,1,1);
-
-        const barW = Math.max(2, Math.floor(width / bits.length));
-        const totalW = bits.length * barW;
-        const startX = Math.round(xCenter - totalW / 2);
-
-        ctx.fillStyle = '#000000';
-        for (let i = 0; i < bits.length; i++) {
-          if (bits[i] === 1) {
-            ctx.fillRect(startX + i * barW, yTop, barW, height);
-          }
-        }
-
-        ctx.font = 'bold 14px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(clean, xCenter, yTop + height + 16);
-        return height + 24;
-      },
-
-      render() {
-        if (UI.activeTab !== 'text') return;
-
-        const rawText = document.getElementById('txtContent').value || ' ';
-        const fontFamily = document.getElementById('txtFontFamily').value;
-        const renderStyle = document.getElementById('txtRenderStyle').value;
-        const fontSize = parseInt(document.getElementById('txtFontSize').value, 10) || 26;
-        const lineHeightMult = parseFloat(document.getElementById('txtLineHeight').value) || 1.35;
-        const borderStyle = document.getElementById('txtBorderStyle').value;
-        const rotateBanner = document.getElementById('txtRotateBanner').checked;
-        const showDate = document.getElementById('txtShowDate').checked;
-        const showCutLine = document.getElementById('txtShowCutLine').checked;
-        const barcodeVal = document.getElementById('txtBarcodeValue').value.trim();
-
-        document.getElementById('val_txtFontSize').textContent = `${fontSize} px`;
-        document.getElementById('val_txtLineHeight').textContent = lineHeightMult.toFixed(2);
-
-        const padX = borderStyle === 'none' ? 12 : 24;
-        const usableW = (rotateBanner ? 620 : PRINTER_WIDTH) - padX * 2;
-        const lineStep = Math.round(fontSize * lineHeightMult);
-
-        const measureCanvas = document.createElement('canvas');
-        const mCtx = measureCanvas.getContext('2d');
-        const fontStr = `${this.italic ? 'italic ' : ''}${this.bold ? 'bold ' : ''}${fontSize}px ${fontFamily}`;
-        mCtx.font = fontStr;
-
-        // Word-wrapping inteligente línea por línea
-        const paragraphs = rawText.split('\n');
-        const wrappedLines = [];
-
-        paragraphs.forEach(para => {
-          const trimmed = para.trim();
-          if (trimmed === '---' || trimmed === '===') {
-            wrappedLines.push({ type: 'divider' });
-            return;
-          }
-
-          let checkbox = null;
-          let textBody = para;
-          if (para.startsWith('[ ] ')) {
-            checkbox = 'unchecked';
-            textBody = para.slice(4);
-          } else if (para.toLowerCase().startsWith('[x] ')) {
-            checkbox = 'checked';
-            textBody = para.slice(4);
-          }
-
-          const availW = checkbox ? usableW - (fontSize + 10) : usableW;
-          const words = textBody.split(' ');
-          let currentLine = '';
-
-          for (let i = 0; i < words.length; i++) {
-            const word = words[i];
-            const testLine = currentLine ? `${currentLine} ${word}` : word;
-            const metrics = mCtx.measureText(testLine);
-
-            if (metrics.width > availW && currentLine !== '') {
-              wrappedLines.push({ type: 'text', text: currentLine, checkbox });
-              checkbox = checkbox ? 'indent' : null;
-              currentLine = word;
-            } else {
-              currentLine = testLine;
-            }
-          }
-          wrappedLines.push({ type: 'text', text: currentLine, checkbox });
-        });
-
-        // Calcular altura necesaria del documento
-        let totalH = 24;
-        if (showDate) totalH += 28;
-        wrappedLines.forEach(item => {
-          totalH += (item.type === 'divider') ? 20 : lineStep;
-        });
-        if (barcodeVal) totalH += 82;
-        if (showCutLine) totalH += 28;
-        totalH = Math.max(96, totalH + 16);
-
-        const docW = rotateBanner ? Math.max(400, usableW + padX * 2) : PRINTER_WIDTH;
-        const docCanvas = document.createElement('canvas');
-        docCanvas.width = docW;
-        docCanvas.height = totalH;
-        const ctx = docCanvas.getContext('2d', { willReadFrequently: true });
-
-        // Fondo base según estilo
-        const isInverted = (renderStyle === 'inverted_safe');
-        ctx.fillStyle = isInverted ? '#000000' : '#ffffff';
-        ctx.fillRect(0, 0, docW, totalH);
-        const fgColor = isInverted ? '#ffffff' : '#000000';
-
-        // Dibujar Marco si aplica
-        if (borderStyle === 'simple') {
-          ctx.strokeStyle = fgColor;
-          ctx.lineWidth = 3;
-          ctx.strokeRect(4, 4, docW - 8, totalH - 8);
-        } else if (borderStyle === 'double') {
-          ctx.strokeStyle = fgColor;
-          ctx.lineWidth = 3;
-          ctx.strokeRect(4, 4, docW - 8, totalH - 8);
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(10, 10, docW - 20, totalH - 20);
-        } else if (borderStyle === 'dashed') {
-          ctx.strokeStyle = fgColor;
-          ctx.lineWidth = 2.5;
-          ctx.setLineDash([8, 6]);
-          ctx.strokeRect(5, 5, docW - 10, totalH - 10);
-          ctx.setLineDash([]);
-        } else if (borderStyle === 'Warning') {
-          ctx.strokeStyle = fgColor;
-          ctx.lineWidth = 6;
-          ctx.strokeRect(4, 4, docW - 8, totalH - 8);
-        }
-
-        let curY = 20;
-
-        // Fecha y hora opcional
-        if (showDate) {
-          ctx.fillStyle = fgColor;
-          ctx.font = 'bold 13px "JetBrains Mono", monospace';
-          ctx.textAlign = 'center';
-          const nowStr = new Date().toLocaleString('es-ES', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
-          ctx.fillText(`• ${nowStr} •`, docW / 2, curY + 8);
-          curY += 26;
-        }
-
-        // Renderizar cada línea
-        ctx.font = fontStr;
-        ctx.textBaseline = 'top';
-
-        wrappedLines.forEach(item => {
-          if (item.type === 'divider') {
-            ctx.strokeStyle = fgColor;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(padX, curY + 9);
-            ctx.lineTo(docW - padX, curY + 9);
-            ctx.stroke();
-            curY += 20;
-            return;
-          }
-
-          let drawX = padX;
-          if (this.align === 'center') drawX = docW / 2;
-          if (this.align === 'right') drawX = docW - padX;
-          ctx.textAlign = this.align;
-
-          // Casilla de checklist
-          if (item.checkbox === 'unchecked' || item.checkbox === 'checked') {
-            const boxSize = Math.round(fontSize * 0.78);
-            const boxX = padX;
-            const boxY = curY + Math.round((fontSize - boxSize) * 0.6);
-            ctx.strokeStyle = fgColor;
-            ctx.lineWidth = 2.5;
-            ctx.strokeRect(boxX, boxY, boxSize, boxSize);
-
-            if (item.checkbox === 'checked') {
-              ctx.beginPath();
-              ctx.moveTo(boxX + 3, boxY + boxSize * 0.55);
-              ctx.lineTo(boxX + boxSize * 0.42, boxY + boxSize - 3);
-              ctx.lineTo(boxX + boxSize - 3, boxY + 3);
-              ctx.stroke();
-            }
-            drawX = padX + boxSize + 10;
-            ctx.textAlign = 'left';
-          } else if (item.checkbox === 'indent') {
-            const boxSize = Math.round(fontSize * 0.78);
-            drawX = padX + boxSize + 10;
-            ctx.textAlign = 'left';
-          }
-
-          // Modo Eco Contorno Hueco vs Sólido
-          if (renderStyle === 'eco_hollow') {
-            ctx.strokeStyle = fgColor;
-            ctx.lineWidth = Math.max(1.8, fontSize * 0.07);
-            ctx.strokeText(item.text, drawX, curY);
-          } else {
-            ctx.fillStyle = fgColor;
-            ctx.fillText(item.text, drawX, curY);
-          }
-
-          // Subrayado opcional
-          if (this.underline && item.text.trim().length > 0) {
-            const m = ctx.measureText(item.text);
-            let ux = drawX;
-            if (ctx.textAlign === 'center') ux = drawX - m.width / 2;
-            if (ctx.textAlign === 'right') ux = drawX - m.width;
-            ctx.fillStyle = fgColor;
-            ctx.fillRect(ux, curY + fontSize + 1, m.width, Math.max(2, Math.round(fontSize * 0.07)));
-          }
-
-          curY += lineStep;
-        });
-
-        // Código de barras opcional al pie
-        if (barcodeVal) {
-          curY += 8;
-          this.drawBarcodePattern(ctx, barcodeVal, docW / 2, curY, docW - padX * 2, 46);
-          curY += 74;
-        }
-
-        // Línea de corte final
-        if (showCutLine) {
-          curY += 6;
-          ctx.strokeStyle = fgColor;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([5, 5]);
-          ctx.beginPath();
-          ctx.moveTo(12, curY + 8);
-          ctx.lineTo(docW - 12, curY + 8);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.font = '12px sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillStyle = fgColor;
-          ctx.fillText('✂', 14, curY);
-        }
-
-        // Si es Banner 90°, rotar al canvas maestro de 384px de ancho
-        const masterCanvas = document.getElementById('masterThermalCanvas');
-        if (rotateBanner) {
-          masterCanvas.width = PRINTER_WIDTH;
-          masterCanvas.height = docW;
-          const mCtx2 = masterCanvas.getContext('2d', { willReadFrequently: true });
-          mCtx2.fillStyle = '#ffffff';
-          mCtx2.fillRect(0, 0, masterCanvas.width, masterCanvas.height);
-          mCtx2.save();
-          mCtx2.translate(PRINTER_WIDTH / 2, docW / 2);
-          mCtx2.rotate(Math.PI / 2);
-          mCtx2.drawImage(docCanvas, -docW / 2, -PRINTER_WIDTH / 2, docW, PRINTER_WIDTH);
-          mCtx2.restore();
-        } else {
-          masterCanvas.width = PRINTER_WIDTH;
-          masterCanvas.height = totalH;
-          const mCtx2 = masterCanvas.getContext('2d', { willReadFrequently: true });
-          mCtx2.drawImage(docCanvas, 0, 0);
-        }
-
-        // Binarización nítida 1-bit + Trama Eco si está seleccionada
-        const finalCtx = masterCanvas.getContext('2d', { willReadFrequently: true });
-        const imgData = finalCtx.getImageData(0, 0, masterCanvas.width, masterCanvas.height);
-        const d = imgData.data;
-        const w = masterCanvas.width;
-        const h = masterCanvas.height;
-
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const i = (y * w + x) * 4;
-            const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-            let isBlack = lum < 145;
-
-            // Aplicar trama ahorradora si se eligió Eco Semitono o Invertido Seguro
-            if (isBlack && (renderStyle === 'eco_halftone' || renderStyle === 'inverted_safe')) {
-              if ((x + y) % 2 === 0 && (x % 2 === 0)) {
-                isBlack = false; // Micro-perforación del 25% que mantiene el negro intenso sin sobrecalentar
-              }
-            }
-
-            const v = isBlack ? 0 : 255;
-            d[i] = v;
-            d[i + 1] = v;
-            d[i + 2] = v;
-            d[i + 3] = 255;
-          }
-        }
-        finalCtx.putImageData(imgData, 0, 0);
-
-        Telemetry.analyzeFromCanvas(masterCanvas);
-      }
-    };
-
-    /**
-     * =========================================================================
-     * MOTOR DE CONEXIÓN WEB BLUETOOTH (ISSC TRANSPARENT UART) Y ESC/POS
-     * =========================================================================
-     */
-    const PrinterEngine = {
-      device: null,
-      server: null,
-      txCharacteristic: null,
-      rxCharacteristic: null,
-      isPrinting: false,
-      abortRequested: false,
-
-      sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-      },
-
-      /**
-       * Conecta con la impresora YHK-TNN00000 en Bluefy (iOS) o Chrome
-       * @param {boolean} acceptAll Si es true, abre el selector universal sin filtro de nombre
-       */
-      async connect(acceptAll = false) {
-        if (!navigator.bluetooth) {
-          UI.toast('Web Bluetooth no detectado. En iPhone abre esta página usando la app gratuita Bluefy.', 'err');
-          Logger.log('ERROR: navigator.bluetooth no está disponible en este navegador.', 'err');
-          return;
-        }
-
-        // Si ya está conectado y el usuario pulsa el botón principal, desconectar
-        if (this.device && this.device.gatt.connected && !acceptAll) {
-          this.disconnect();
-          return;
-        }
-
-        const primaryService = EngineConfig.serviceUuid || '49535343-fe7d-4ae5-8fa9-9fafd205e455';
-        const optionalServicesList = [
-          primaryService,
-          '49535343-fe7d-4ae5-8fa9-9fafd205e455',
-          '000018f0-0000-1000-8000-00805f9b34fb',
-          '0000ff00-0000-1000-8000-00805f9b34fb',
-          'e7810a71-73ae-499d-8c15-faa9aef0c3f2'
+    <script>
+        /***********************************************************************
+         * 1. VARIABLES DE ESTADO Y CONFIGURACIÓN DEL PROTOCOLO YHK
+         ***********************************************************************/
+        const PRINTER_WIDTH = 384; // 384 puntos = 48 bytes por línea (impresora 58mm)
+        const BYTES_PER_ROW = PRINTER_WIDTH / 8; // 48 bytes
+
+        // Lista de UUIDs conocidos en impresoras YHK (ISSC Transparent UART y estándar BLE)
+        const KNOWN_SERVICES = [
+            '49535343-fe7d-4ae5-8fa9-9fafd205e455', // ISSC UART (El más común en YHK-XXXX)
+            '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer
+            '0000ff00-0000-1000-8000-00805f9b34fb', // Serie FF00
+            '0000ae30-0000-1000-8000-00805f9b34fb', // Variantes Cat Printer
+            'e7810a71-73ae-499d-8c15-faa9aef0c3f2'  // SPP over BLE
         ];
 
-        try {
-          Logger.log(`Solicitando dispositivo BLE (${acceptAll ? 'Escaneo Universal' : 'Filtro YHK / ISSC'})...`, 'info');
+        const PREFERRED_TX_CHARS = [
+            '49535343-8841-43f4-a8d4-ecbe34729bb3', // ISSC TX (Host -> Impresora YHK)
+            '00002af1-0000-1000-8000-00805f9b34fb',
+            '0000ff02-0000-1000-8000-00805f9b34fb',
+            '0000ae01-0000-1000-8000-00805f9b34fb'
+        ];
 
-          const requestOptions = acceptAll
-            ? { acceptAllDevices: true, optionalServices: optionalServicesList }
-            : {
-                filters: [
-                  { namePrefix: 'YHK' },
-                  { namePrefix: 'Walk' },
-                  { namePrefix: 'MPT' },
-                  { services: [primaryService] }
-                ],
-                optionalServices: optionalServicesList
-              };
+        let bleDevice = null;
+        let bleServer = null;
+        let writeCharacteristic = null;
+        let isPrinting = false;
 
-          this.device = await navigator.bluetooth.requestDevice(requestOptions);
-          this.device.addEventListener('gattserverdisconnected', () => this.onDisconnected());
+        // Estado del editor visual
+        let currentMode = 'note'; // 'note' | 'photo' | 'draw' | 'qr'
+        let textAlign = 'left';
+        let textBold = true;
+        let textBorder = false;
+        let ditherMode = 'threshold'; // 'threshold' | 'floyd' | 'atkinson'
+        let loadedPhotoImage = null;
 
-          Logger.log(`Conectando GATT a ${this.device.name || 'Dispositivo BLE'}...`, 'info');
-          this.server = await this.device.gatt.connect();
+        // Estado de la pizarra de dibujo
+        let isDrawing = false;
+        let brushMode = 'draw';
+        let lastX = 0, lastY = 0;
 
-          // Buscar el servicio ISSC Transparent UART o servicio compatible
-          let service = null;
-          try {
-            service = await this.server.getPrimaryService(primaryService);
-            Logger.log(`Servicio principal encontrado: ${primaryService}`, 'ok');
-          } catch (e) {
-            Logger.log('Buscando servicios GATT primarios disponibles...', 'warn');
-            const services = await this.server.getPrimaryServices();
-            if (services.length > 0) {
-              service = services[0];
-              Logger.log(`Usando servicio descubierto: ${service.uuid}`, 'ok');
+        /***********************************************************************
+         * 2. INICIALIZACIÓN AL CARGAR LA PÁGINA
+         ***********************************************************************/
+        window.onload = function () {
+            // Comprobar soporte Web Bluetooth (Bluefy en iOS lo provee)
+            if (!navigator.bluetooth) {
+                document.getElementById('bleWarning').classList.remove('hidden');
+                logDebug('[AVISO] navigator.bluetooth no disponible. Usa Bluefy en iOS.');
             } else {
-              throw new Error('No se encontraron servicios GATT en la impresora.');
+                logDebug('[OK] API Web Bluetooth detectada correctamente.');
             }
-          }
 
-          // Obtener características TX (Escritura) y RX (Notificación)
-          const characteristics = await service.getCharacteristics();
-          this.txCharacteristic = null;
-          this.rxCharacteristic = null;
+            initSketchPad();
+            loadDemoTurtle(false); // Pre-cargar imagen demo en memoria por si cambia a pestaña Foto
+            renderToThermalCanvas();
+        };
 
-          for (const char of characteristics) {
-            const uuid = char.uuid.toLowerCase();
-            Logger.log(`Característica detectada: ${uuid}`, 'info');
-            if (uuid === EngineConfig.txUuid || char.properties.write || char.properties.writeWithoutResponse) {
-              if (!this.txCharacteristic || uuid === EngineConfig.txUuid) {
-                this.txCharacteristic = char;
-              }
+        /***********************************************************************
+         * 3. CONEXIÓN BLUETOOTH BLE (OPTIMIZADO PARA BLUEFY EN IPHONE)
+         ***********************************************************************/
+        async function toggleBluetoothConnection() {
+            if (bleDevice && bleDevice.gatt.connected) {
+                bleDevice.gatt.disconnect();
+                onDisconnected();
+                showToast('Impresora desconectada', 'info');
+                return;
             }
-            if (uuid === EngineConfig.rxUuid || char.properties.notify) {
-              this.rxCharacteristic = char;
+
+            if (!navigator.bluetooth) {
+                showToast('Abre esta web en la app Bluefy de tu iPhone', 'error');
+                return;
             }
-          }
 
-          if (!this.txCharacteristic) {
-            throw new Error('No se encontró la característica de escritura (TX).');
-          }
-
-          Logger.log(`Canal TX listo: ${this.txCharacteristic.uuid}`, 'ok');
-
-          // Suscribirse a notificaciones de estado RX (49535343-1e4d-4bd9-ba61-23c647249616)
-          if (this.rxCharacteristic && this.rxCharacteristic.properties.notify) {
             try {
-              await this.rxCharacteristic.startNotifications();
-              this.rxCharacteristic.addEventListener('characteristicvaluechanged', (ev) => {
-                const val = new Uint8Array(ev.target.value.buffer);
-                const hex = Array.from(val).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-                Logger.log(`RX Impresora ← [${hex}]`, 'rx');
-              });
-              Logger.log(`Suscrito a notificaciones RX: ${this.rxCharacteristic.uuid}`, 'ok');
-            } catch (notifyErr) {
-              Logger.log('Aviso: notificaciones RX opcionales no activadas.', 'warn');
+                logDebug('[BLE] Buscando impresora YHK...');
+                showToast('Buscando impresora Bluetooth...', 'info');
+
+                // En Bluefy funciona muy bien filtrar por prefijo YHK o mostrar todos los periféricos BLE
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: KNOWN_SERVICES
+                });
+
+                logDebug(`[BLE] Dispositivo elegido: ${bleDevice.name || 'Sin nombre'} (${bleDevice.id})`);
+                bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                updateStatusUI('Conectando...', 'amber');
+                bleServer = await bleDevice.gatt.connect();
+                logDebug('[BLE] Servidor GATT conectado. Buscando canal de escritura TX...');
+
+                // Buscar automáticamente la característica de escritura entre los servicios disponibles
+                writeCharacteristic = await findWritableCharacteristic(bleServer);
+
+                if (!writeCharacteristic) {
+                    throw new Error('No se encontró un canal de escritura BLE compatible.');
+                }
+
+                const devName = bleDevice.name || 'YHK Printer';
+                updateStatusUI(`Conectado a ${devName}`, 'emerald');
+                logDebug(`[OK] Canal TX listo: ${writeCharacteristic.uuid}`);
+                showToast(`¡Conectado a ${devName}!`, 'success');
+
+            } catch (err) {
+                logDebug(`[ERROR BLE] ${err.message}`);
+                if (!err.message.includes('cancelled')) {
+                    showToast(`Error al conectar: ${err.message}`, 'error');
+                }
+                onDisconnected();
             }
-          }
-
-          UI.updateConnectionStatus(true, this.device.name);
-          UI.toast(`Conectado a ${this.device.name || 'YHK-TNN00000'}`, 'ok');
-
-        } catch (err) {
-          Logger.log(`Fallo de conexión: ${err.message}`, 'err');
-          UI.toast(`No se pudo conectar: ${err.message}`, 'err');
-        }
-      },
-
-      disconnect() {
-        if (this.device && this.device.gatt.connected) {
-          this.device.gatt.disconnect();
-        }
-        this.onDisconnected();
-      },
-
-      onDisconnected() {
-        this.txCharacteristic = null;
-        this.rxCharacteristic = null;
-        UI.updateConnectionStatus(false);
-        Logger.log('Impresora desconectada.', 'warn');
-      },
-
-      /**
-       * Escribe un bloque pequeño de bytes en la característica BLE con reintento automático a prueba de errores
-       */
-      async writePacketSafe(uint8Chunk) {
-        if (!this.txCharacteristic) {
-          throw new Error('Impresora no conectada.');
         }
 
-        const mode = EngineConfig.writeMode;
-        const props = this.txCharacteristic.properties;
+        async function findWritableCharacteristic(server) {
+            // 1. Intentar primero con los servicios conocidos de YHK (ISSC 49535343...)
+            for (const serviceUuid of KNOWN_SERVICES) {
+                try {
+                    const service = await server.getPrimaryService(serviceUuid);
+                    const chars = await service.getCharacteristics();
 
-        for (let attempt = 1; attempt <= 3; attempt++) {
-          try {
-            if (mode === 'withoutResponse' || (mode === 'auto' && props.writeWithoutResponse)) {
-              if (this.txCharacteristic.writeValueWithoutResponse) {
-                await this.txCharacteristic.writeValueWithoutResponse(uint8Chunk);
-              } else {
-                await this.txCharacteristic.writeValue(uint8Chunk);
-              }
+                    // Priorizar la característica TX oficial de YHK (49535343-8841...)
+                    for (const prefUuid of PREFERRED_TX_CHARS) {
+                        const found = chars.find(c => c.uuid.toLowerCase() === prefUuid);
+                        if (found) return found;
+                    }
+
+                    // Si no, devolver cualquier característica que soporte escritura
+                    for (const c of chars) {
+                        if (c.properties.writeWithoutResponse || c.properties.write) {
+                            return c;
+                        }
+                    }
+                } catch (e) {
+                    // Continuar probando el siguiente servicio
+                }
+            }
+
+            // 2. Fallback: escanear todos los servicios primarios que exponga el dispositivo en Bluefy
+            try {
+                const services = await server.getPrimaryServices();
+                for (const service of services) {
+                    const chars = await service.getCharacteristics();
+                    for (const c of chars) {
+                        if (c.properties.writeWithoutResponse || c.properties.write) {
+                            return c;
+                        }
+                    }
+                }
+            } catch (e) {
+                logDebug(`[WARN] No se pudieron listar servicios genéricos: ${e.message}`);
+            }
+
+            return null;
+        }
+
+        function onDisconnected() {
+            writeCharacteristic = null;
+            updateStatusUI('Desconectado', 'rose');
+            logDebug('[BLE] Desconectado de la impresora.');
+        }
+
+        function updateStatusUI(text, color) {
+            const dot = document.getElementById('statusDot');
+            const label = document.getElementById('statusText');
+            const btnText = document.getElementById('btBtnText');
+            const btn = document.getElementById('btnConnect');
+
+            label.textContent = text;
+            dot.className = `w-2 h-2 rounded-full bg-${color}-500`;
+
+            if (color === 'emerald') {
+                btnText.textContent = 'Desconectar';
+                btn.className = 'px-4 py-2 rounded-xl font-semibold text-xs flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 transition';
             } else {
-              if (this.txCharacteristic.writeValueWithResponse) {
-                await this.txCharacteristic.writeValueWithResponse(uint8Chunk);
-              } else {
-                await this.txCharacteristic.writeValue(uint8Chunk);
-              }
+                btnText.textContent = 'Conectar';
+                btn.className = 'px-4 py-2 rounded-xl font-semibold text-xs flex items-center gap-1.5 bg-fuchsia-600 hover:bg-fuchsia-500 text-white transition shadow-lg shadow-fuchsia-600/25';
             }
-            return; // Éxito
-          } catch (err) {
-            if (attempt === 3) throw err;
-            // Pequeño backoff si la pila BLE de iOS/Bluefy está ocupada
-            await this.sleep(25 * attempt);
-          }
-        }
-      },
-
-      /**
-       * Fragmenta cualquier buffer en chunks MTU y los envía con la pausa configurada
-       */
-      async sendChunkedBuffer(buffer) {
-        const chunkSize = EngineConfig.chunkSize;
-        const delay = EngineConfig.chunkDelay;
-
-        for (let offset = 0; offset < buffer.length; offset += chunkSize) {
-          if (this.abortRequested) break;
-          const slice = buffer.subarray(offset, Math.min(offset + chunkSize, buffer.length));
-          await this.writePacketSafe(slice);
-          if (delay > 0) {
-            await this.sleep(delay);
-          }
-        }
-      },
-
-      /**
-       * Genera los comandos ESC/POS de inicialización y ajuste de densidad opcional
-       */
-      getInitSequence() {
-        const bytes = [0x1B, 0x40]; // ESC @ (Initialize printer)
-
-        // Ajuste de calentamiento ESC 7 n1 n2 n3 si el usuario lo seleccionó
-        if (EngineConfig.densityCmd === 'esc7_low') {
-          bytes.push(0x1B, 0x37, 7, 65, 2);
-        } else if (EngineConfig.densityCmd === 'esc7_med') {
-          bytes.push(0x1B, 0x37, 9, 110, 2);
-        } else if (EngineConfig.densityCmd === 'esc7_high') {
-          bytes.push(0x1B, 0x37, 11, 160, 3);
         }
 
-        return new Uint8Array(bytes);
-      },
+        /***********************************************************************
+         * 4. PROTOCOLO DE INGENIERÍA INVERSA YHK (ESC/POS RASTER BITMAP)
+         *
+         * Según el repositorio YHK-Cat-Thermal-Printer:
+         * - Ancho fijo: 384 píxeles = 48 bytes por fila (0x30, 0x00 en Little Endian)
+         * - Inicialización: ESC @ (0x1B, 0x40)
+         * - Densidad opcional: 0x1D, 0x49, 0xF0, n
+         * - Comando de imagen: GS v 0 (0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH + datos)
+         *   donde 1 = punto negro (calor), 0 = punto blanco (papel)
+         ***********************************************************************/
+        function packCanvasTo1BitRows(canvas) {
+            const ctx = canvas.getContext('2d');
+            const width = PRINTER_WIDTH;
+            const height = canvas.height;
+            const imgData = ctx.getImageData(0, 0, width, height).data;
 
-      /**
-       * Avanza el papel N líneas
-       */
-      async feedLines(lines = 3) {
-        if (!this.txCharacteristic) {
-          UI.toast('Conecta primero la impresora YHK por Bluetooth.', 'warn');
-          return;
-        }
-        try {
-          const feedCmd = new Uint8Array(lines).fill(0x0A);
-          await this.sendChunkedBuffer(feedCmd);
-          Logger.log(`Avance de papel enviado (${lines} líneas).`, 'ok');
-        } catch (err) {
-          UI.toast(`Error al avanzar papel: ${err.message}`, 'err');
-        }
-      },
-
-      /**
-       * Solicita el estado a la impresora (secuencias típicas DLE EOT / WalkPrint)
-       */
-      async queryStatus() {
-        if (!this.txCharacteristic) {
-          UI.toast('Conecta primero la impresora para sondear su estado.', 'warn');
-          return;
-        }
-        try {
-          // DLE EOT 1 (Estado general ESC/POS) + GS r 1
-          const cmd = new Uint8Array([0x10, 0x04, 0x01, 0x1D, 0x72, 0x01]);
-          await this.sendChunkedBuffer(cmd);
-          Logger.log('Sondeo enviado: [10 04 01 1D 72 01]. Observa respuestas RX.', 'info');
-        } catch (e) {
-          Logger.log(`Error sondeando estado: ${e.message}`, 'err');
-        }
-      },
-
-      async sendRawHex(hexString) {
-        if (!this.txCharacteristic) {
-          UI.toast('Conecta primero la impresora.', 'warn');
-          return;
-        }
-        const clean = hexString.trim().split(/[\s,]+/);
-        const arr = [];
-        for (const token of clean) {
-          const val = parseInt(token, 16);
-          if (!isNaN(val) && val >= 0 && val <= 255) arr.push(val);
-        }
-        if (arr.length === 0) return;
-
-        try {
-          await this.sendChunkedBuffer(new Uint8Array(arr));
-          Logger.log(`TX HEX enviado (${arr.length}B): ${hexString}`, 'ok');
-        } catch (e) {
-          UI.toast(`Error enviando HEX: ${e.message}`, 'err');
-        }
-      },
-
-      sendCustomHexInput() {
-        const val = document.getElementById('customHexInput').value;
-        if (val) this.sendRawHex(val);
-      },
-
-      abortPrint() {
-        if (this.isPrinting) {
-          this.abortRequested = true;
-          UI.toast('Impresión cancelada por el usuario.', 'warn');
-          Logger.log('Abortando transmisión de impresión...', 'warn');
-        }
-      },
-
-      /**
-       * IMPRESIÓN PRINCIPAL POR BANDAS RÁSTER (GS v 0) CON PAUSA TÉRMICA ADAPTATIVA
-       */
-      async printCurrentCanvas() {
-        if (this.isPrinting) return;
-
-        // Asegurar que la vista previa esté actualizada
-        if (UI.activeTab === 'image') ImageModule.render();
-        if (UI.activeTab === 'text') TextModule.render();
-
-        if (!this.txCharacteristic) {
-          UI.toast('Impresora desconectada. Abriendo selector Bluetooth...', 'info');
-          await this.connect(false);
-          if (!this.txCharacteristic) return;
-        }
-
-        const packedData = Telemetry.currentPackedBytes;
-        const totalRows = Telemetry.currentHeight;
-        if (!packedData || totalRows <= 0) {
-          UI.toast('No hay datos en el lienzo para imprimir.', 'warn');
-          return;
-        }
-
-        this.isPrinting = true;
-        this.abortRequested = false;
-
-        // Mostrar interfaz de progreso y botón de parada
-        const progBox = document.getElementById('printProgressContainer');
-        const progLabel = document.getElementById('printProgressLabel');
-        const progPct = document.getElementById('printProgressPercent');
-        const progBar = document.getElementById('printProgressBar');
-        const btnAbort = document.getElementById('btnAbortPrint');
-        const btnMainText = document.getElementById('btnPrintMainText');
-
-        progBox.classList.remove('hidden');
-        btnAbort.classList.remove('hidden');
-        btnMainText.textContent = 'IMPRIMIENDO...';
-
-        const rowsPerBand = EngineConfig.rowsPerBand;
-        const totalBands = Math.ceil(totalRows / rowsPerBand);
-        const rasterM = EngineConfig.rasterMode & 0x03;
-
-        Logger.log(`Iniciando trabajo: 384x${totalRows}px en ${totalBands} bandas (MTU=${EngineConfig.chunkSize}B, Delay=${EngineConfig.chunkDelay}ms)`, 'info');
-
-        try {
-          // 1. Inicializar impresora ESC @
-          await this.sendChunkedBuffer(this.getInitSequence());
-          await this.sleep(30);
-
-          // 2. Transmitir cada banda con su propia cabecera GS v 0 m xL xH yL yH
-          for (let bandIdx = 0; bandIdx < totalBands; bandIdx++) {
-            if (this.abortRequested) break;
-
-            const startRow = bandIdx * rowsPerBand;
-            const bandRows = Math.min(rowsPerBand, totalRows - startRow);
-            const byteOffset = startRow * BYTES_PER_ROW;
-            const byteCount = bandRows * BYTES_PER_ROW;
-
-            // Calcular densidad térmica media de esta banda para protección del cabezal
-            let bandDensitySum = 0;
-            for (let r = startRow; r < startRow + bandRows; r++) {
-              bandDensitySum += Telemetry.rowDensities[r] || 0;
+            const rows = [];
+            for (let y = 0; y < height; y++) {
+                const rowBytes = new Uint8Array(BYTES_PER_ROW);
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    // En el canvas ya binarizado, R < 128 es negro
+                    const isBlack = imgData[idx] < 128;
+                    if (isBlack) {
+                        const byteIndex = x >> 3; // Math.floor(x / 8)
+                        const bitIndex = 7 - (x & 7); // MSB primero
+                        rowBytes[byteIndex] |= (1 << bitIndex);
+                    }
+                }
+                rows.push(rowBytes);
             }
-            const avgBandDensity = bandDensitySum / bandRows;
 
-            // Construir paquete de banda: Cabecera GS v 0 (8 bytes) + Datos de píxeles
-            const bandBuffer = new Uint8Array(8 + byteCount);
-            bandBuffer[0] = 0x1D; // GS
-            bandBuffer[1] = 0x76; // 'v'
-            bandBuffer[2] = 0x30; // '0'
-            bandBuffer[3] = rasterM;
-            bandBuffer[4] = BYTES_PER_ROW & 0xFF;        // xL = 48 (0x30)
-            bandBuffer[5] = (BYTES_PER_ROW >> 8) & 0xFF; // xH = 0  (0x00)
-            bandBuffer[6] = bandRows & 0xFF;             // yL
-            bandBuffer[7] = (bandRows >> 8) & 0xFF;      // yH
-            bandBuffer.set(packedData.subarray(byteOffset, byteOffset + byteCount), 8);
-
-            // Actualizar telemetría UI
-            const pct = Math.round(((bandIdx + 1) / totalBands) * 100);
-            progLabel.textContent = `Banda ${bandIdx + 1}/${totalBands} (${Math.round(avgBandDensity * 100)}% calor)`;
-            progPct.textContent = `${pct}%`;
-            progBar.style.width = `${pct}%`;
-
-            // Enviar banda fragmentada en paquetes MTU
-            await this.sendChunkedBuffer(bandBuffer);
-
-            // Pausa inter-banda + enfriamiento adaptativo si la banda fue muy negra
-            let pauseMs = EngineConfig.bandDelay;
-            if (EngineConfig.adaptiveThermal && avgBandDensity > 0.50) {
-              const extraCooldown = Math.round((avgBandDensity - 0.50) * 160);
-              pauseMs += extraCooldown;
+            // Recortar líneas completamente blancas al final para no desperdiciar papel
+            while (rows.length > 16) {
+                const lastRow = rows[rows.length - 1];
+                const isBlank = lastRow.every(b => b === 0);
+                if (isBlank) {
+                    rows.pop();
+                } else {
+                    break;
+                }
             }
-            if (pauseMs > 0) {
-              await this.sleep(pauseMs);
-            }
-          }
 
-          // 3. Avance de papel final para liberar el corte
-          if (!this.abortRequested && EngineConfig.feedAfter > 0) {
-            const feedBytes = new Uint8Array(EngineConfig.feedAfter).fill(0x0A);
-            await this.sendChunkedBuffer(feedBytes);
-          }
-
-          // Reset limpio al terminar
-          await this.sendChunkedBuffer(new Uint8Array([0x1B, 0x40]));
-
-          if (!this.abortRequested) {
-            UI.toast('¡Impresión completada con éxito!', 'ok');
-            Logger.log('Trabajo de impresión finalizado sin errores.', 'ok');
-          }
-
-        } catch (err) {
-          Logger.log(`Error durante la impresión: ${err.message}`, 'err');
-          UI.toast(`Error de transmisión BLE: ${err.message}`, 'err');
-        } finally {
-          this.isPrinting = false;
-          this.abortRequested = false;
-          setTimeout(() => {
-            progBox.classList.add('hidden');
-            btnAbort.classList.add('hidden');
-            btnMainText.textContent = 'IMPRIMIR AHORA (384 PX)';
-            progBar.style.width = '0%';
-          }, 800);
+            return rows;
         }
-      },
 
-      /**
-       * Imprime un micro-ticket de diagnóstico rápido para verificar la comunicación BLE
-       */
-      async printHardwareTestTicket() {
-        UI.switchTab('text');
-        document.getElementById('txtContent').value =
-          "TEST BLE YHK-TNN00000\n---\nAncho cabezal: 384 px (48B)\nMTU Chunk: " +
-          EngineConfig.chunkSize + "B / " + EngineConfig.chunkDelay + "ms\nBanda GS v 0: " +
-          EngineConfig.rowsPerBand + " filas\n---\n[x] UART Transparente OK";
-        document.getElementById('txtFontSize').value = 22;
-        document.getElementById('txtBorderStyle').value = 'simple';
-        TextModule.render();
-        await this.printCurrentCanvas();
-      }
-    };
+        function buildYHKPrintPayload(canvas) {
+            const rows = packCanvasTo1BitRows(canvas);
+            const totalLines = rows.length;
+            const maxBandLines = parseInt(document.getElementById('bandLinesSelect').value, 10);
+            const density = parseInt(document.getElementById('heatDensitySelect').value, 10);
 
-    // Inicialización al cargar la página
-    window.addEventListener('DOMContentLoaded', () => {
-      EngineConfig.init();
-      ImageModule.init();
-      Logger.log('YHK Studio Pro iniciado. Listo para conectar vía Web Bluetooth (Bluefy en iOS).', 'info');
-    });
-  </script>
+            const chunks = [];
+
+            // 1. Inicializar impresora (ESC @) + Comando de densidad YHK
+            chunks.push(new Uint8Array([0x1B, 0x40]));
+            chunks.push(new Uint8Array([0x1D, 0x49, 0xF0, density]));
+
+            // 2. Dividir la imagen en bloques GS v 0 (1D 76 30 00 xL xH yL yH)
+            let y = 0;
+            while (y < totalLines) {
+                const bandHeight = Math.min(maxBandLines, totalLines - y);
+                const xL = BYTES_PER_ROW & 0xFF;        // 48 (0x30)
+                const xH = (BYTES_PER_ROW >> 8) & 0xFF; // 0  (0x00)
+                const yL = bandHeight & 0xFF;
+                const yH = (bandHeight >> 8) & 0xFF;
+
+                const header = new Uint8Array([0x1D, 0x76, 0x30, 0x00, xL, xH, yL, yH]);
+                const bandBuffer = new Uint8Array(header.length + bandHeight * BYTES_PER_ROW);
+                bandBuffer.set(header, 0);
+
+                for (let i = 0; i < bandHeight; i++) {
+                    bandBuffer.set(rows[y + i], header.length + i * BYTES_PER_ROW);
+                }
+
+                chunks.push(bandBuffer);
+                y += bandHeight;
+            }
+
+            // 3. Avance final de papel (4 líneas para poder cortar en la sierra dentada)
+            chunks.push(new Uint8Array([0x1B, 0x64, 0x04]));
+
+            // Unir todo en un único flujo de bytes listo para trocear por MTU BLE
+            const totalByteLength = chunks.reduce((acc, c) => acc + c.length, 0);
+            const fullPayload = new Uint8Array(totalByteLength);
+            let offset = 0;
+            for (const c of chunks) {
+                fullPayload.set(c, offset);
+                offset += c.length;
+            }
+
+            return { fullPayload, totalLines };
+        }
+
+        async function sendRawBytesOverBLE(payload) {
+            if (!writeCharacteristic) {
+                throw new Error('La impresora no está conectada por Bluetooth.');
+            }
+
+            const mtuChunkSize = parseInt(document.getElementById('chunkSizeSelect').value, 10);
+            const delayMs = parseInt(document.getElementById('chunkDelaySelect').value, 10);
+            const canWriteWithoutResp = writeCharacteristic.properties.writeWithoutResponse;
+
+            const progContainer = document.getElementById('printProgressContainer');
+            const progBar = document.getElementById('printProgressBar');
+            const progPct = document.getElementById('printProgressPct');
+
+            progContainer.classList.remove('hidden');
+            const totalBytes = payload.length;
+            let sentBytes = 0;
+
+            for (let i = 0; i < totalBytes; i += mtuChunkSize) {
+                const slice = payload.slice(i, Math.min(i + mtuChunkSize, totalBytes));
+
+                if (canWriteWithoutResp && writeCharacteristic.writeValueWithoutResponse) {
+                    await writeCharacteristic.writeValueWithoutResponse(slice);
+                } else {
+                    await writeCharacteristic.writeValue(slice);
+                }
+
+                sentBytes += slice.length;
+                const pct = Math.min(100, Math.round((sentBytes / totalBytes) * 100));
+                progBar.style.width = `${pct}%`;
+                progPct.textContent = `${pct}%`;
+
+                await sleep(delayMs);
+            }
+
+            setTimeout(() => {
+                progContainer.classList.add('hidden');
+                progBar.style.width = '0%';
+            }, 800);
+        }
+
+        async function printCanvasToYHK() {
+            if (isPrinting) return;
+
+            const canvas = document.getElementById('thermalCanvas');
+            const { fullPayload, totalLines } = buildYHKPrintPayload(canvas);
+
+            logDebug(`[ESC/POS] Preparado bitmap 1-bit: 384x${totalLines}px (${fullPayload.length} bytes)`);
+
+            if (!writeCharacteristic) {
+                showToast('Conecta primero tu impresora YHK con el botón superior', 'error');
+                return;
+            }
+
+            try {
+                isPrinting = true;
+                document.getElementById('btnPrint').disabled = true;
+                showToast('Imprimiendo en tu YHK Cat Printer...', 'info');
+
+                await sendRawBytesOverBLE(fullPayload);
+
+                logDebug('[OK] Impresión finalizada con éxito.');
+                showToast('¡Impresión completada! 🐱', 'success');
+            } catch (err) {
+                logDebug(`[ERROR IMPRESIÓN] ${err.message}`);
+                showToast(`Fallo al enviar: ${err.message}`, 'error');
+            } finally {
+                isPrinting = false;
+                document.getElementById('btnPrint').disabled = false;
+            }
+        }
+
+        async function feedPaper(lines = 3) {
+            if (!writeCharacteristic) {
+                showToast('Conecta tu impresora primero para avanzar papel', 'error');
+                return;
+            }
+            try {
+                // Enviar ESC @ + ESC d n (y un bloque vacío de 24 líneas blancas por si el firmware ignora ESC d)
+                const emptyBand = new Uint8Array(8 + 24 * BYTES_PER_ROW);
+                emptyBand.set([0x1D, 0x76, 0x30, 0x00, BYTES_PER_ROW, 0x00, 24, 0x00], 0);
+
+                const cmd = new Uint8Array([0x1B, 0x40, 0x1B, 0x64, lines]);
+                const combined = new Uint8Array(cmd.length + emptyBand.length);
+                combined.set(cmd, 0);
+                combined.set(emptyBand, cmd.length);
+
+                await sendRawBytesOverBLE(combined);
+                logDebug(`[FEED] Papel avanzado (${lines} líneas).`);
+            } catch (err) {
+                showToast(`Error: ${err.message}`, 'error');
+            }
+        }
+
+        /***********************************************************************
+         * 5. MOTOR DE RENDERIZADO Y TRAMADO 1-BIT (DITHERING)
+         ***********************************************************************/
+        function renderToThermalCanvas() {
+            const thermalCanvas = document.getElementById('thermalCanvas');
+            const ctx = thermalCanvas.getContext('2d');
+
+            // Crear un canvas temporal en escala de grises a 384px de ancho
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = PRINTER_WIDTH;
+            const tCtx = tempCanvas.getContext('2d');
+
+            if (currentMode === 'note') {
+                renderNoteToContext(tempCanvas, tCtx);
+            } else if (currentMode === 'photo') {
+                renderPhotoToContext(tempCanvas, tCtx);
+            } else if (currentMode === 'draw') {
+                renderDrawToContext(tempCanvas, tCtx);
+            } else if (currentMode === 'qr') {
+                renderQRToContext(tempCanvas, tCtx);
+            }
+
+            // Si está activada la rotación 180° (útil cuando el papel sale de cabeza)
+            if (document.getElementById('chkRotate180').checked) {
+                const rotCanvas = document.createElement('canvas');
+                rotCanvas.width = tempCanvas.width;
+                rotCanvas.height = tempCanvas.height;
+                const rCtx = rotCanvas.getContext('2d');
+                rCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
+                rCtx.rotate(Math.PI);
+                rCtx.drawImage(tempCanvas, -tempCanvas.width / 2, -tempCanvas.height / 2);
+                tCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tCtx.drawImage(rotCanvas, 0, 0);
+            }
+
+            // Ajustar altura del canvas final y aplicar algoritmo de conversión a 1-Bit
+            thermalCanvas.width = PRINTER_WIDTH;
+            thermalCanvas.height = tempCanvas.height;
+
+            apply1BitDithering(tCtx, ctx, PRINTER_WIDTH, tempCanvas.height);
+
+            // Actualizar etiqueta de dimensiones
+            document.getElementById('dimensionsBadge').textContent =
+                `384 × ${thermalCanvas.height} px (48 bytes/fila)`;
+        }
+
+        function renderNoteToContext(canvas, ctx) {
+            const rawText = document.getElementById('noteInput').value || ' ';
+            const fontSize = parseInt(document.getElementById('fontSizeSlider').value, 10);
+            const fontFamily = document.getElementById('fontFamilySelect').value;
+            const lineHeight = Math.round(fontSize * 1.28);
+            const padding = textBorder ? 22 : 12;
+            const maxWidth = PRINTER_WIDTH - padding * 2;
+
+            ctx.font = `${textBold ? 'bold ' : ''}${fontSize}px ${fontFamily}`;
+
+            // Word-wrap automático a 384px
+            const paragraphs = rawText.split('\n');
+            const wrappedLines = [];
+
+            for (const para of paragraphs) {
+                if (para.trim() === '') {
+                    wrappedLines.push('');
+                    continue;
+                }
+                const words = para.split(' ');
+                let currentLine = words[0];
+
+                for (let i = 1; i < words.length; i++) {
+                    const testLine = currentLine + ' ' + words[i];
+                    if (ctx.measureText(testLine).width <= maxWidth) {
+                        currentLine = testLine;
+                    } else {
+                        wrappedLines.push(currentLine);
+                        currentLine = words[i];
+                    }
+                }
+                wrappedLines.push(currentLine);
+            }
+
+            const totalHeight = Math.max(80, wrappedLines.length * lineHeight + padding * 2 + 12);
+            canvas.height = totalHeight;
+
+            // Fondo blanco
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, PRINTER_WIDTH, totalHeight);
+
+            // Marco decorativo opcional
+            if (textBorder) {
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(6, 6, PRINTER_WIDTH - 12, totalHeight - 12);
+            }
+
+            // Dibujar texto
+            ctx.fillStyle = '#000000';
+            ctx.font = `${textBold ? 'bold ' : ''}${fontSize}px ${fontFamily}`;
+            ctx.textBaseline = 'top';
+
+            wrappedLines.forEach((line, idx) => {
+                let x = padding;
+                const y = padding + idx * lineHeight;
+                if (textAlign === 'center') {
+                    ctx.textAlign = 'center';
+                    x = PRINTER_WIDTH / 2;
+                } else if (textAlign === 'right') {
+                    ctx.textAlign = 'right';
+                    x = PRINTER_WIDTH - padding;
+                } else {
+                    ctx.textAlign = 'left';
+                }
+                ctx.fillText(line, x, y);
+            });
+        }
+
+        function renderPhotoToContext(canvas, ctx) {
+            if (!loadedPhotoImage) {
+                canvas.height = 160;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, PRINTER_WIDTH, canvas.height);
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 20px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Sube una foto para imprimir', PRINTER_WIDTH / 2, 80);
+                return;
+            }
+
+            const scale = PRINTER_WIDTH / loadedPhotoImage.width;
+            const targetHeight = Math.max(32, Math.round(loadedPhotoImage.height * scale));
+            canvas.height = targetHeight;
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, PRINTER_WIDTH, targetHeight);
+            ctx.drawImage(loadedPhotoImage, 0, 0, PRINTER_WIDTH, targetHeight);
+        }
+
+        function renderDrawToContext(canvas, ctx) {
+            const sketch = document.getElementById('sketchCanvas');
+            canvas.height = sketch.height;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, PRINTER_WIDTH, canvas.height);
+            ctx.drawImage(sketch, 0, 0);
+        }
+
+        function renderQRToContext(canvas, ctx) {
+            const text = document.getElementById('qrText').value.trim() || 'https://google.com';
+            const caption = document.getElementById('qrCaption').value.trim();
+            const qrSize = parseInt(document.getElementById('qrScale').value, 10);
+
+            const totalHeight = qrSize + (caption ? 64 : 28);
+            canvas.height = totalHeight;
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, PRINTER_WIDTH, totalHeight);
+
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(text);
+                qr.make();
+
+                const moduleCount = qr.getModuleCount();
+                const tileSize = qrSize / moduleCount;
+                const offsetX = Math.round((PRINTER_WIDTH - qrSize) / 2);
+                const offsetY = 14;
+
+                ctx.fillStyle = '#000000';
+                for (let r = 0; r < moduleCount; r++) {
+                    for (let c = 0; c < moduleCount; c++) {
+                        if (qr.isDark(r, c)) {
+                            ctx.fillRect(
+                                Math.floor(offsetX + c * tileSize),
+                                Math.floor(offsetY + r * tileSize),
+                                Math.ceil(tileSize),
+                                Math.ceil(tileSize)
+                            );
+                        }
+                    }
+                }
+
+                if (caption) {
+                    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(caption, PRINTER_WIDTH / 2, qrSize + 40);
+                }
+            } catch (e) {
+                ctx.fillStyle = '#000000';
+                ctx.font = '16px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Texto demasiado largo para el QR', PRINTER_WIDTH / 2, 80);
+            }
+        }
+
+        function apply1BitDithering(srcCtx, destCtx, width, height) {
+            const threshold = parseInt(document.getElementById('thresholdSlider').value, 10);
+            const contrast = parseInt(document.getElementById('contrastSlider').value, 10);
+            const invert = document.getElementById('chkInvert').checked;
+
+            document.getElementById('thresholdVal').textContent = threshold;
+            document.getElementById('contrastVal').textContent = contrast > 0 ? `+${contrast}` : contrast;
+
+            const imgData = srcCtx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+
+            // Factor de contraste
+            const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+            // Matriz de luminancia en punto flotante para difusión de error
+            const lum = new Float32Array(width * height);
+
+            for (let i = 0; i < width * height; i++) {
+                const idx = i * 4;
+                const alpha = data[idx + 3] / 255;
+                // Mezclar con fondo blanco si tiene transparencia
+                const r = data[idx] * alpha + 255 * (1 - alpha);
+                const g = data[idx + 1] * alpha + 255 * (1 - alpha);
+                const b = data[idx + 2] * alpha + 255 * (1 - alpha);
+
+                let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                gray = factor * (gray - 128) + 128;
+                gray = Math.max(0, Math.min(255, gray));
+
+                if (invert) gray = 255 - gray;
+                lum[i] = gray;
+            }
+
+            if (ditherMode === 'threshold') {
+                for (let i = 0; i < width * height; i++) {
+                    lum[i] = lum[i] < threshold ? 0 : 255;
+                }
+            } else if (ditherMode === 'floyd') {
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const i = y * width + x;
+                        const oldPixel = lum[i];
+                        const newPixel = oldPixel < threshold ? 0 : 255;
+                        lum[i] = newPixel;
+                        const err = oldPixel - newPixel;
+
+                        if (x + 1 < width) lum[i + 1] += err * (7 / 16);
+                        if (x - 1 >= 0 && y + 1 < height) lum[i + width - 1] += err * (3 / 16);
+                        if (y + 1 < height) lum[i + width] += err * (5 / 16);
+                        if (x + 1 < width && y + 1 < height) lum[i + width + 1] += err * (1 / 16);
+                    }
+                }
+            } else if (ditherMode === 'atkinson') {
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const i = y * width + x;
+                        const oldPixel = lum[i];
+                        const newPixel = oldPixel < threshold ? 0 : 255;
+                        lum[i] = newPixel;
+                        const err = (oldPixel - newPixel) / 8;
+
+                        if (x + 1 < width) lum[i + 1] += err;
+                        if (x + 2 < width) lum[i + 2] += err;
+                        if (x - 1 >= 0 && y + 1 < height) lum[i + width - 1] += err;
+                        if (y + 1 < height) lum[i + width] += err;
+                        if (x + 1 < width && y + 1 < height) lum[i + width + 1] += err;
+                        if (y + 2 < height) lum[i + width * 2] += err;
+                    }
+                }
+            }
+
+            // Volcar resultado 1-Bit puro al canvas de vista previa
+            for (let i = 0; i < width * height; i++) {
+                const v = lum[i] < 128 ? 0 : 255;
+                const idx = i * 4;
+                data[idx] = v;
+                data[idx + 1] = v;
+                data[idx + 2] = v;
+                data[idx + 3] = 255;
+            }
+
+            destCtx.putImageData(imgData, 0, 0);
+        }
+
+        /***********************************************************************
+         * 6. CONTROLES DE INTERFAZ, FOTOS, PLANTILLAS Y PIZARRA
+         ***********************************************************************/
+        function switchMode(mode) {
+            currentMode = mode;
+            const modes = ['note', 'photo', 'draw', 'qr'];
+            modes.forEach(m => {
+                document.getElementById(`panel-${m}`).classList.toggle('hidden', m !== mode);
+                const tab = document.getElementById(`tab-${m}`);
+                if (m === mode) {
+                    tab.className = 'mode-tab py-2 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition bg-slate-800 text-fuchsia-400 shadow';
+                } else {
+                    tab.className = 'mode-tab py-2 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-slate-200';
+                }
+            });
+
+            // En modo foto, pre-seleccionar tramado Floyd-Steinberg automáticamente para mejor calidad
+            if (mode === 'photo') {
+                setDitherMode('floyd');
+            } else if (mode === 'note' || mode === 'qr') {
+                setDitherMode('threshold');
+            }
+
+            renderToThermalCanvas();
+        }
+
+        function updateTextOptions() {
+            const size = document.getElementById('fontSizeSlider').value;
+            document.getElementById('fontSizeVal').textContent = `${size}px`;
+            renderToThermalCanvas();
+        }
+
+        function setTextAlign(align) {
+            textAlign = align;
+            ['left', 'center', 'right'].forEach(a => {
+                const btn = document.getElementById(`align-${a}`);
+                btn.className = a === align
+                    ? 'px-3 py-1 rounded-lg text-xs bg-slate-800 text-fuchsia-400'
+                    : 'px-3 py-1 rounded-lg text-xs text-slate-400';
+            });
+            renderToThermalCanvas();
+        }
+
+        function toggleTextBold() {
+            textBold = !textBold;
+            const btn = document.getElementById('btnBold');
+            btn.className = textBold
+                ? 'px-3 py-1.5 rounded-xl text-xs font-bold border border-fuchsia-500/40 bg-fuchsia-500/20 text-fuchsia-300'
+                : 'px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-800 bg-slate-950 text-slate-400';
+            renderToThermalCanvas();
+        }
+
+        function toggleTextBorder() {
+            textBorder = !textBorder;
+            const btn = document.getElementById('btnBorder');
+            btn.className = textBorder
+                ? 'px-3 py-1.5 rounded-xl text-xs font-bold border border-fuchsia-500/40 bg-fuchsia-500/20 text-fuchsia-300'
+                : 'px-3 py-1.5 rounded-xl text-xs border border-slate-800 bg-slate-950 text-slate-400';
+            renderToThermalCanvas();
+        }
+
+        function setDitherMode(mode) {
+            ditherMode = mode;
+            ['threshold', 'floyd', 'atkinson'].forEach(m => {
+                const btn = document.getElementById(`dither-${m}`);
+                btn.className = m === mode
+                    ? 'py-1.5 px-2 rounded-xl text-[11px] font-medium border border-fuchsia-500/50 bg-fuchsia-500/20 text-fuchsia-300'
+                    : 'py-1.5 px-2 rounded-xl text-[11px] font-medium border border-slate-800 bg-slate-950 text-slate-400';
+            });
+            renderToThermalCanvas();
+        }
+
+        function resetAdjustments() {
+            document.getElementById('thresholdSlider').value = 128;
+            document.getElementById('contrastSlider').value = 0;
+            document.getElementById('chkRotate180').checked = false;
+            document.getElementById('chkInvert').checked = false;
+            renderToThermalCanvas();
+        }
+
+        function insertTemplate(type) {
+            const input = document.getElementById('noteInput');
+            const now = new Date().toLocaleDateString('es-CL');
+            if (type === 'todo') {
+                input.value = `📋 LISTA DEL DÍA (${now})\n========================\n[ ] Comprar papel térmico 58mm\n[ ] Probar conexión en Bluefy\n[ ] Imprimir etiqueta QR\n[ ] Darle comida al Michi 🐱`;
+            } else if (type === 'receipt') {
+                input.value = `   🐱 CAT PRINTER EXPRESS   \n       OSORNO - CHILE       \n----------------------------\nCANT  DESCRIPCIÓN      TOTAL\n----------------------------\n1x    Rollo 58mm       $1.500\n1x    Sticker Michi    $  990\n----------------------------\nTOTAL:                 $2.490\n   ¡GRACIAS POR SU COMPRA!  `;
+            }
+            renderToThermalCanvas();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    loadedPhotoImage = img;
+                    setDitherMode('floyd');
+                    renderToThermalCanvas();
+                    showToast('Foto cargada y tramada a 384px', 'success');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Ilustración generada por código en homenaje al archivo Turtle.jpg del repositorio original
+        function loadDemoTurtle(notify = true) {
+            const demoCanvas = document.createElement('canvas');
+            demoCanvas.width = 384;
+            demoCanvas.height = 240;
+            const dCtx = demoCanvas.getContext('2d');
+
+            // Fondo con gradiente suave para demostrar el tramado Floyd-Steinberg
+            const grad = dCtx.createLinearGradient(0, 0, 384, 240);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(1, '#d4d4d8');
+            dCtx.fillStyle = grad;
+            dCtx.fillRect(0, 0, 384, 240);
+
+            // Dibujar tortuga/gatito vectorial con sombras
+            dCtx.fillStyle = '#27272a';
+            // Patas
+            dCtx.beginPath();
+            dCtx.arc(130, 175, 22, 0, Math.PI * 2);
+            dCtx.arc(245, 175, 22, 0, Math.PI * 2);
+            dCtx.fill();
+
+            // Cabeza de tortuga
+            dCtx.fillStyle = '#52525b';
+            dCtx.beginPath();
+            dCtx.ellipse(305, 130, 34, 25, -0.2, 0, Math.PI * 2);
+            dCtx.fill();
+
+            // Ojo
+            dCtx.fillStyle = '#ffffff';
+            dCtx.beginPath();
+            dCtx.arc(318, 123, 7, 0, Math.PI * 2);
+            dCtx.fill();
+            dCtx.fillStyle = '#000000';
+            dCtx.beginPath();
+            dCtx.arc(320, 123, 3.5, 0, Math.PI * 2);
+            dCtx.fill();
+
+            // Caparazón con degradado radial
+            const shellGrad = dCtx.createRadialGradient(180, 105, 15, 185, 125, 95);
+            shellGrad.addColorStop(0, '#71717a');
+            shellGrad.addColorStop(1, '#18181b');
+            dCtx.fillStyle = shellGrad;
+            dCtx.beginPath();
+            dCtx.arc(185, 145, 85, Math.PI, 0, false);
+            dCtx.closePath();
+            dCtx.fill();
+
+            // Patrón hexagonal del caparazón
+            dCtx.strokeStyle = '#e4e4e7';
+            dCtx.lineWidth = 3;
+            dCtx.strokeRect(155, 90, 60, 38);
+
+            // Título en homenaje al repo original
+            dCtx.fillStyle = '#000000';
+            dCtx.font = 'bold 16px "JetBrains Mono", monospace';
+            dCtx.textAlign = 'center';
+            dCtx.fillText('YHK-Cat-Thermal-Printer: Turtle Demo', 192, 222);
+
+            const img = new Image();
+            img.onload = function () {
+                loadedPhotoImage = img;
+                if (currentMode === 'photo') {
+                    setDitherMode('floyd');
+                    renderToThermalCanvas();
+                }
+                if (notify) showToast('Tortuga de prueba cargada', 'info');
+            };
+            img.src = demoCanvas.toDataURL();
+        }
+
+        /***********************************************************************
+         * 7. PIZARRA DE DIBUJO TÁCTIL (PARA IPHONE)
+         ***********************************************************************/
+        function initSketchPad() {
+            const canvas = document.getElementById('sketchCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar saludo inicial en la pizarra
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.font = 'bold 22px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#000000';
+            ctx.fillText('¡Dibuja aquí con tu dedo! 🐾', canvas.width / 2, 40);
+
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * (canvas.width / rect.width),
+                    y: (clientY - rect.top) * (canvas.height / rect.height)
+                };
+            };
+
+            const startDraw = (e) => {
+                e.preventDefault();
+                isDrawing = true;
+                const pos = getPos(e);
+                lastX = pos.x;
+                lastY = pos.y;
+            };
+
+            const moveDraw = (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = brushMode === 'erase' ? '#FFFFFF' : '#000000';
+                ctx.lineWidth = parseInt(document.getElementById('brushSize').value, 10);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                lastX = pos.x;
+                lastY = pos.y;
+                renderToThermalCanvas();
+            };
+
+            const endDraw = () => {
+                isDrawing = false;
+            };
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', moveDraw);
+            window.addEventListener('mouseup', endDraw);
+
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', moveDraw, { passive: false });
+            window.addEventListener('touchend', endDraw);
+        }
+
+        function setBrushMode(mode) {
+            brushMode = mode;
+            document.getElementById('brushDrawBtn').className = mode === 'draw'
+                ? 'px-2.5 py-1 rounded-lg text-xs bg-fuchsia-600 text-white font-medium'
+                : 'px-2.5 py-1 rounded-lg text-xs bg-slate-800 text-slate-300';
+            document.getElementById('brushEraseBtn').className = mode === 'erase'
+                ? 'px-2.5 py-1 rounded-lg text-xs bg-fuchsia-600 text-white font-medium'
+                : 'px-2.5 py-1 rounded-lg text-xs bg-slate-800 text-slate-300';
+        }
+
+        function clearSketchPad() {
+            const canvas = document.getElementById('sketchCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            renderToThermalCanvas();
+        }
+
+        /***********************************************************************
+         * 8. UTILIDADES Y LOGS
+         ***********************************************************************/
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function logDebug(msg) {
+            const box = document.getElementById('debugLog');
+            const line = document.createElement('div');
+            const time = new Date().toLocaleTimeString('es-CL', { hour12: false });
+            line.textContent = `[${time}] ${msg}`;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+
+        let toastTimeout = null;
+        function showToast(message, type = 'info') {
+            const modal = document.getElementById('toastModal');
+            const text = document.getElementById('toastText');
+            const icon = document.getElementById('toastIcon');
+
+            text.textContent = message;
+            if (type === 'error') {
+                icon.className = 'ph-fill ph-warning-octagon text-lg text-rose-400';
+            } else if (type === 'success') {
+                icon.className = 'ph-fill ph-check-circle text-lg text-emerald-400';
+            } else {
+                icon.className = 'ph-fill ph-info text-lg text-fuchsia-400';
+            }
+
+            modal.classList.remove('opacity-0', '-translate-y-3');
+            modal.classList.add('opacity-100', 'translate-y-0');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                modal.classList.add('opacity-0', '-translate-y-3');
+                modal.classList.remove('opacity-100', 'translate-y-0');
+            }, 3200);
+        }
+    </script>
 </body>
 </html>
